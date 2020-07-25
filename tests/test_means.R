@@ -68,7 +68,7 @@ stopifnot(
     is.na(mean_arithmetic(NA, na.rm = TRUE))
     is.na(mean_arithmetic(NaN, na.rm = TRUE))
     is.na(mean_arithmetic(NA, 1, na.rm = TRUE))
-    is.na(mean_arithmetic(NA, 0.5, na.rm = TRUE, scale = FALSE))
+    mean_arithmetic(NA, 0.5, na.rm = TRUE, scale = FALSE) == 0
     is.na(mean_arithmetic(1, NA, na.rm = TRUE))
     is.na(mean_arithmetic(1, NaN, na.rm = TRUE))
     is.na(mean_arithmetic(numeric(0)))
@@ -78,7 +78,7 @@ stopifnot(
     all.equal(mean_arithmetic(c(1, NA), c(1, 2), na.rm = TRUE), 1)
     is.na(mean_arithmetic(c(1, NA), c(NA, 2), na.rm = TRUE))
     all.equal(mean_arithmetic(1:2, c(2, NA), na.rm = TRUE, scale = FALSE), 2)
-    is.na(mean_arithmetic(c(1, NA), c(NA, 2), na.rm = TRUE, scale = FALSE))
+    mean_arithmetic(c(1, NA), c(NA, 2), na.rm = TRUE, scale = FALSE) == 0
     # Change weights
     all(
       apply(
@@ -115,18 +115,38 @@ stopifnot(
         logical(3)
       )
     )
+    # Zero values
+    all(
+      vapply(
+        seq(-10, 0, by = 0.5), 
+        function(r) mean_generalized(replace(x, 3, 0), w, r = r) == 0,
+        logical(1)
+        )
+      )
+    all.equal(mean_geometric(c(1, 0, 2), c(0.5, 0, 0.5)), sqrt(2))
+    all.equal(mean_harmonic(c(1, -1, 2), c(0.5, 0, 0.5)), 4/3)
+    mean_arithmetic(c(1, Inf), c(1, 0)) == 1
+    is.na(mean_arithmetic(c(1, NaN), c(1, 0)))
+    # Limits
+    mean_generalized(1:5, r = Inf) == 5
+    mean_generalized(1:5, r = -Inf) == 1
+    mean_generalized(1:5, 5:1, r = Inf) == 5
+    mean_generalized(1:5, 5:1, r = -Inf) == 1
+    mean_generalized(c(2:3, NA), r = Inf, na.rm = TRUE) == 3
+    mean_generalized(c(2:3, NA), r = -Inf, na.rm = TRUE) == 2
   },
   local = getNamespace("gpindex")
 )
 
 #---- Tests for generalized log means ----
-
 stopifnot(
   exprs = {
     # Checks against known values
     logmean(1, 1) == 1
     logmean(1, 0) == 0
     all.equal(logmean(2, 1), 1 / log(2))
+    logmean_generalized(1, 2, 2) == 1.5
+    all.equal(logmean_generalized(1, 2, -1), sqrt(2))
     # Test against a simple implementation
     all(
       vapply(
