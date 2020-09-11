@@ -1,27 +1,8 @@
-export(mean_arithmetic)
-export(mean_generalized)
-export(mean_geometric)
-export(mean_harmonic)
-export(logmean_generalized)
-export(logmean)
-export(weights_change)
-export(weights_factor)
-export(weights_update)
-export(weights_g2a)
-export(weights_h2a)
-export(weights_a2g)
-export(weights_h2g)
-export(weights_scale)
-export(index_weights)
-export(index_arithmetic)
-export(index_lowe)
-export(index_young)
-export(index_geometric)
-export(index_harmonic)
-export(index_fisher)
-export(index_hlp)
-export(index_lm)
-export(index_cswd)
-export(index_cswdb)
-export(index_bw)
-export(index_stuval)
+export(mean_generalized, mean_arithmetic, mean_geometric, mean_harmonic,
+       mean_extended, logmean_generalized, logmean,
+       weights_transmute, weights_factor, weights_update, weights_scale,
+       contributions, contributions_geometric, contributions_harmonic,
+       index_weights,
+       index_arithmetic, index_geometric, index_harmonic,
+       index_laspeyres, index_paasche, index_jevons, index_lowe, index_young,
+       index_fisher, index_hlp, index_lm, index_cswd, index_cswdb, index_bw, index_stuval)

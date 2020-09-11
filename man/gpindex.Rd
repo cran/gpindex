@@ -16,7 +16,7 @@ Generalized indexes are a large family of price indexes that are consistent in a
 
 All generalized indexes are based on the generalized mean, which is provided by the \code{\link[gpindex:mean_generalized]{mean_generalized()}} function. Given a set of price relatives and weights, any generalized price index is easily calculated as a generalized mean. 
 
-Two important functions for decomposing generalized means are given by \code{\link[gpindex:weights_change]{weights_change()}} and \code{\link[gpindex:weights_factor]{weights_factor()}}. These functions can be used to calculate quote contributions and price-update weights for generalized indexes. 
+Two important functions for decomposing generalized means are given by \code{\link[gpindex:weights_transmute]{weights_transmute()}} and \code{\link[gpindex:weights_factor]{weights_factor()}}. These functions can be used to calculate quote contributions and price-update weights for generalized indexes. 
 
 Together these functions, along with \code{\link[gpindex:logmean_generalized]{logmean_generalized()}}, provide the key mathematical apparatus to work with any type of generalized index, and those that are nested generalized indexes.
 
@@ -24,9 +24,9 @@ On top of these basic mathematical tools are functions for making standard price
 }
 
 \note{
-There are a number of R packages on the CRAN for working with price/quantity indexes (e.g., 'IndexNumber', 'productivity', 'IndexNumR', 'micEconIndex'). Compared to existing libraries, this package provides greater flexibility for building index numbers in the class of generalized price and quantity indexes. 
+There are a number of R packages on the CRAN for working with price/quantity indexes (e.g., \code{'IndexNumber'}, \code{'productivity'}, \code{'IndexNumR'}, \code{'micEconIndex'}). Compared to existing packages, this package provides greater flexibility for building index numbers in the class of generalized price and quantity indexes. 
 
-While there is support for a large number of index-number formulas out-of-the box, the focus is on the tools to easily make and work with any type of generalized price index. No assumptions are made about how data are stored or arranged; rather, the functions in the package are designed to work with atomic vectors, and can be used with R's standard data-manipulation functions for more complex data structures. Compared to existing libraries, this library is suitable for building custom price/quantity indexes, and learning about different types of index-number formulas.
+While there is support for a large number of index-number formulas out-of-the box, the focus is on the tools to easily make and work with any type of generalized price index. No assumptions are made about how data are stored or arranged; rather, the functions in the package are designed to work with atomic vectors, and can be used with R's standard data-manipulation functions for more complex data structures. Compared to existing packages, this package is suitable for building custom price/quantity indexes, and learning about different types of index-number formulas.
 }
 
 \references{
