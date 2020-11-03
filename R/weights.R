@@ -4,8 +4,7 @@ weights_transmute <- function(r, s) {
   extended_mean <- mean_extended(r, s)
   # return function
   function(x, w = rep(1, length(x))) {
-    m <- generalized_mean(x, w, na.rm = TRUE)
-    res <- w * extended_mean(x, m) %^% (r - s)
+    res <- w * extended_mean(x, generalized_mean(x, w, na.rm = TRUE)) %^% (r - s)
     # make sure NAs propagate
     if (r == s) res[is.na(x) & !is.na(w)] <- NA
     res
@@ -14,11 +13,11 @@ weights_transmute <- function(r, s) {
 
 #---- Factor weights  ----
 weights_factor <- function(r) {
-  stopifnot("'r' must be a finite length 1 numeric vector" = length1(r, "numeric"))
+  stopifnot("'r' must be a finite length 1 numeric" = is_number(r))
   # return function
   function(x, w = rep(1, length(x))) {
-    stopifnot("'x' and 'w' must be numeric vectors" = is_numeric(x, w),
-              "'x' and 'w' must be the same length" = same_length(x, w))
+    stopifnot("'x' and 'w' must be numeric vectors" = all_numeric(x, w),
+              "'x' and 'w' must be the same length" = all_same_length(x, w))
     res <- w * x %^% r
     # make sure NAs propagate
     if (r == 0) res[is.na(x) & !is.na(w)] <- NA
@@ -30,7 +29,6 @@ weights_update <- weights_factor(1)
 
 #---- Scale weights ----
 weights_scale <- function(x) {
-  stopifnot("'x' must be a numeric vector" = is_numeric(x))
   x / sum(x, na.rm = TRUE)
 }
 
@@ -41,6 +39,8 @@ contributions <- function(r) {
     weights_scale(arithmetic_weights(x, w)) * (x - 1)
   }
 }
+
+contributions_arithmetic <- contributions(1)
 
 contributions_geometric <- contributions(0)
 

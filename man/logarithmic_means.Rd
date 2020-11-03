@@ -3,7 +3,7 @@
 \alias{logmean}
 \alias{mean_extended}
 
-\title{Generalized logarithmic mean / extended mean}
+\title{Logarithmic means}
 
 \description{
 Calculate a generalized logarithmic mean / extended mean.
@@ -20,7 +20,7 @@ logmean(a, b, tol = .Machine$double.eps^0.5)
 \arguments{
 \item{r, s}{A finite number giving the order of the generalized logarithmic mean / extended mean.}
 
-\item{a, b}{A numeric vector.}
+\item{a, b}{A strictly positive numeric vector.}
 
 \item{tol}{The tolerance used to determine if \code{a == b}.}
 }
@@ -36,13 +36,13 @@ logmean(a, b, tol = .Machine$double.eps^0.5)
 \details{
 The function \code{mean_extended()} returns a function to compute the extended mean of \code{a} and \code{b} of order \code{r} and \code{s}. See Bullen (2003, p. 393) for a definition. This is also called the difference mean, Stolarsky mean, or extended mean-value mean. 
 
-The function \code{logmean_generalized()} returns a function to compute the generalized logarithmic mean of \code{a} and \code{b} of order \code{r}. See Bullen (2003, p. 385) for a definition, or \url{https://en.wikipedia.org/wiki/Stolarsky_mean}. The generalized logarithmic mean is a special case of the extended mean, \code{mean_extended(r, 1)}, but is more commonly used for price indexes.
+The function \code{logmean_generalized()} returns a function to compute the generalized logarithmic mean of \code{a} and \code{b} of order \code{r}. See Bullen (2003, p. 385) for a definition, or \url{https://en.wikipedia.org/wiki/Stolarsky_mean}. The generalized logarithmic mean is a special case of the extended mean, corresponding to \code{mean_extended(r, 1)()}, but is more commonly used for price indexes.
 
-The function \code{logmean()} returns the ordinary logarithmic mean, and corresponds to \code{logmean_generalized(1)}.
+The function \code{logmean()} returns the ordinary logarithmic mean, and corresponds to \code{logmean_generalized(1)()}.
 
-Both \code{a} and \code{b} should be strictly positive. This is not enforced here, but the results may not make sense when the generalized logarithmic mean / extended mean is not defined.
+Both \code{a} and \code{b} should be strictly positive. This is not enforced, but the results may not make sense when the generalized logarithmic mean / extended mean is not defined.
 
-By definition, the generalized logarithmic mean / extended mean of \code{a} and \code{b} is \code{a} when \code{a == b}. The \code{tol} argument is used to test equality by checking if \code{abs(a - b) <= tol}. The default value is the same as in \code{\link[base:all.equal]{all.equal()}}. Setting \code{tol = 0} will test for exact equality, but can give misleading results in certain applications when \code{a} and \code{b} are computed values.
+By definition, the generalized logarithmic mean / extended mean of \code{a} and \code{b} is \code{a} when \code{a == b}. The \code{tol} argument is used to test equality by checking if \code{abs(a - b) <= tol}. The default value is the same as in \code{\link[base:all.equal]{all.equal()}}. Setting \code{tol = 0} will test for exact equality, but can give misleading results when \code{a} and \code{b} are computed values.
 }
 
 \section{Warning}{
@@ -50,7 +50,7 @@ Passing very small values for \code{r} or \code{s} can give misleading results, 
 }
 
 \note{
-\code{logmean_generalized()} can be defined on the extended real line, so that \code{r = -Inf/Inf} returns \code{\link[base:pmin]{pmin()}}/\code{\link[base:pmax]{pmax()}}, to agree with the definition in, e.g., Bullen (2003). This is not implemented, and \code{r} must be finite.
+\code{logmean_generalized()} can be defined on the extended real line, so that \code{r = -Inf/Inf} returns \code{\link[base:pmin]{pmin()}}/\code{\link[base:pmax]{pmax()}}, to agree with the definition in, e.g., Bullen (2003). This is not implemented, and \code{r} must be finite as in the original formulation by Stolarsky (1975).
 }
 
 \references{
@@ -87,16 +87,16 @@ all(logmean(x, y) < (x + y) / 2) & all(logmean(x, y) > sqrt(x * y))
 # It can be approximated as a convex combination of the arithmetic and 
 # geometric means that gives more weight to the geometric mean
 
-# always a positive approximation error
-1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
-# can have a smaller approximation error
-((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
-logmean(x, y)
+approx1 <- 1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
+approx2 <- ((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
+
+approx1 - logmean(x, y) # always a positive approximation error
+approx2 - logmean(x, y) # a negative approximation error
 
 # A better approximation
 
 correction <- (log(x / y) / pi)^4 / 32
-(1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y)) / (1 + correction)
+approx1 / (1 + correction) - logmean(x, y)
 
 # The harmonic mean cannot be expressed as a logarithmic mean, but can be 
 # expressed as an extended mean
@@ -118,8 +118,7 @@ all.equal(logmean(x, y) * log(x / y), x - y)
 
 r <- 2
 
-all.equal(logmean_generalized(r)(x, y) * (r * (x - y))^(1 / (r - 1)), 
-          (x^r - y^r)^(1 / (r - 1)))
+all.equal(logmean_generalized(r)(x, y)^(r - 1) * (r * (x - y)), (x^r - y^r))
 
 # Some other identities
 

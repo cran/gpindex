@@ -78,6 +78,8 @@ stopifnot(
               mean_harmonic(p1 / p0, p1 * q1 / sum(p1 * q1)))
     all.equal(index_arithmetic("Laspeyres")(p1, p0, q0),
               mean_harmonic(p1 / p0, index_weights("HybridLaspeyres")(p1, q0)))
+    all.equal(index_harmonic("Young")(p1, p0, pb, qb),
+              mean_harmonic(p1 / p0, pb * qb / sum(pb * qb)))
   },
   local = getNamespace("gpindex")
 )
@@ -103,36 +105,24 @@ stopifnot(
   local = getNamespace("gpindex")
 )
 
-#---- Tests for contributions ----
-# stopifnot(
-#   exprs = {
-#     all.equal(index_fisher(p1, p0, q1, q0),
-#               sum(contribution_fisher(p1, p0, q1, q0)))
-#     all(
-#       vapply(
-#         setdiff(types$geometric_index_types, c("Vartia1", "MontgomeryVartia")),
-#         function(i)
-#           all.equal(
-#             index_geometric(p1, p0, q1, q0, i),
-#               sum(contribution_geometric(p1, p0, q1, q0, type = i))
-#             ),
-#         logical(1)
-#       )
-#     )
-#     all(
-#       vapply(
-#         types$harmonic_index_types,
-#         function(i)
-#           all.equal(
-#             index_harmonic(p1, p0, q1, q0, i),
-#             sum(contribution_harmonic(p1, p0, q1, q0, type = i))
-#           ),
-#         logical(1)
-#       )
-#     )
-#   },
-#   local = getNamespace("gpindex")
-# )
+#---- Tests for quantity indexes ----
+stopifnot(
+  exprs = {
+    all.equal(index_fisher(p1, p0, q1, q0),
+              quantity_index(index_fisher)(p1, p0, q1, q0))
+    all.equal(index_hlp(p1, p0, q1, q0),
+              mean_harmonic(c(sum(p1 * q0) / sum(p0 * q0), sum(p1 * q1) / sum(p0 * q1))))
+    all.equal(index_lm(p1, p0, q0, 1.5), 
+              quantity_index(index_lm)(p1, p0, q0, 1.5))
+    all.equal(index_jevons(p1, p0), 
+              quantity_index(index_jevons)(p1, p0))
+    all.equal(index_laspeyres(q1, q0, p0), 
+              quantity_index(index_laspeyres)(q1, q0, p0))
+    all.equal(index_weights("Vartia1")(p1, p0, q1, q0), 
+              quantity_index(index_weights("Vartia1"))(p1, p0, q1, q0))
+  },
+  local = getNamespace("gpindex")
+)
 
 # Test against values from tables 3.4, 3.6, and 3.12 in Balk (2008)
 # Column P in table 3.4 is 1.3823 because of a rounding error
