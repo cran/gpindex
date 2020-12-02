@@ -84,7 +84,7 @@ index_weights(type)
 }
 
 \details{
-The \code{arithmetic_mean()}, \code{geometric_mean()}, and \code{harmonic_mean()} functions return a function to calculate a given type of arithmetic, geometric, and harmonic index. Together, these functions produce functions to calculate the following indexes.
+The \code{index_arithmetic()}, \code{index_geometric()}, and \code{index_harmonic()} functions return a function to calculate a given type of arithmetic, geometric, and harmonic index. Together, these functions produce functions to calculate the following indexes.
 \itemize{
 \item \bold{Arithmetic indexes}
 \item Carli
@@ -148,7 +148,7 @@ Naming for the indexes and weights generally follows the CPI/PPI manual and Balk
 \note{
 Dealing with missing values is cumbersome when making a price index, and best avoided. As there are different approaches for dealing with missing values in a price index, missing values should be dealt with prior to calculating the index. 
 
-The approach taken here when \code{na.rm = TRUE} is to remove price relatives with missing information, either because of a missing price or a missing weight. Certain properties of an index-number formula may not work as expected with missing values, however, if there is ambiguity about how to remove missing values from the weights (as in, e.g., a Tornqvist or Sato-Vartia index).
+The approach taken when \code{na.rm = TRUE} removes price relatives with missing information, either because of a missing price or a missing weight. Certain properties of an index-number formula may not work as expected with missing values, however, if there is ambiguity about how to remove missing values from the weights (as in, e.g., a Tornqvist or Sato-Vartia index).
 }
 
 \references{
@@ -166,7 +166,7 @@ ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Producer Price Index
 
 \code{\link[gpindex]{weights_factor}} for price-updating weights.
 
-\code{\link[gpindex]{quantity_index} to remap the arguments in these functions for a quanity index.}
+\code{\link[gpindex]{quantity_index}} to remap the arguments in these functions for a quanity index.
 }
 
 \examples{
@@ -189,12 +189,6 @@ mean_geometric(p1 / p0, index_weights("Laspeyres")(p0, q0))
 
 index_laspeyres(p1, p0, q0)
 mean_arithmetic(p1 / p0, index_weights("Laspeyres")(p0, q0)) 
-
-# Trivial to turn weights for an arithmetic index 
-# into a basket-style index
-
-qs <- index_weights("Laspeyres")(p0, q0) / p0
-sum(p1 * qs) / sum(p0 * qs)
 
 # Harmonic calculation for the arithmetic Laspeyres
 
@@ -247,13 +241,9 @@ all.equal(sum(con), index_geometric("Tornqvist")(p1, p0, q1, q0) - 1)
 
 # Quote contributions for the Fisher index
 
-wl <- index_weights("Laspeyres")(p0, q0)
-wp <- index_weights("Paasche")(p1, q1)
-wf <- weights_transmute(0, 1)(c(mean_arithmetic(p1 / p0, wl), mean_harmonic(p1 / p0, wp)))
-wf <- weights_scale(wf)
-
-(con <- wf[1] * contributions_arithmetic(p1 / p0, wl) + 
-          wf[2] * contributions_harmonic(p1 / p0, wp))
+contributions_fisher <- contributions_nested(0, c(1, -1))
+(con <- contributions_fisher(p1 / p0, list(index_weights("Laspeyres")(p0, q0), 
+                                           index_weights("Paasche")(p1, q1))))
 
 all.equal(sum(con), index_fisher(p1, p0, q1, q0) - 1)
 
@@ -261,6 +251,7 @@ all.equal(sum(con), index_fisher(p1, p0, q1, q0) - 1)
 
 Qf <- quantity_index(index_fisher)(q1, q0, p1, p0)
 Ql <- quantity_index(index_laspeyres)(q1, q0, p0)
+wl <- index_weights("Laspeyres")(p0, q0)
 wp <- index_weights("HybridPaasche")(p0, q1)
 
 con2 <- (Qf / (Qf + Ql) * weights_scale(wl) + 

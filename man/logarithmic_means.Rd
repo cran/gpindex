@@ -34,7 +34,7 @@ logmean(a, b, tol = .Machine$double.eps^0.5)
 }
 
 \details{
-The function \code{mean_extended()} returns a function to compute the extended mean of \code{a} and \code{b} of order \code{r} and \code{s}. See Bullen (2003, p. 393) for a definition. This is also called the difference mean, Stolarsky mean, or extended mean-value mean. 
+The function \code{mean_extended()} returns a function to compute the extended mean of \code{a} and \code{b} of orders \code{r} and \code{s}. See Bullen (2003, p. 393) for a definition. This is also called the difference mean, Stolarsky mean, or extended mean-value mean. 
 
 The function \code{logmean_generalized()} returns a function to compute the generalized logarithmic mean of \code{a} and \code{b} of order \code{r}. See Bullen (2003, p. 385) for a definition, or \url{https://en.wikipedia.org/wiki/Stolarsky_mean}. The generalized logarithmic mean is a special case of the extended mean, corresponding to \code{mean_extended(r, 1)()}, but is more commonly used for price indexes.
 
@@ -84,20 +84,6 @@ all.equal(logmean_generalized(-1)(x, y), sqrt(x * y))
 
 all(logmean(x, y) < (x + y) / 2) & all(logmean(x, y) > sqrt(x * y))
 
-# It can be approximated as a convex combination of the arithmetic and 
-# geometric means that gives more weight to the geometric mean
-
-approx1 <- 1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
-approx2 <- ((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
-
-approx1 - logmean(x, y) # always a positive approximation error
-approx2 - logmean(x, y) # a negative approximation error
-
-# A better approximation
-
-correction <- (log(x / y) / pi)^4 / 32
-approx1 / (1 + correction) - logmean(x, y)
-
 # The harmonic mean cannot be expressed as a logarithmic mean, but can be 
 # expressed as an extended mean
 
@@ -106,6 +92,27 @@ all.equal(mean_extended(-2, -1)(x, y), 2 / (1 / x + 1 / y))
 # The quadratic mean is also a type of extended mean
 
 all.equal(mean_extended(2, 4)(x, y), sqrt(x^2 / 2 + y^2 / 2))
+
+# As are heronian and centroidal means
+
+all.equal(mean_extended(0.5, 1.5)(x, y), (x + sqrt(x * y) + y) / 3)
+all.equal(mean_extended(2, 3)(x, y), 2 / 3 * (x^2 + x * y + y^2) / (x + y))
+
+#--------------------
+
+# The logarithmic mean can be approximated as a convex combination of the 
+# arithmetic and geometric means that gives more weight to the geometric mean
+
+approx1 <- 1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
+approx2 <- ((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
+
+approx1 - logmean(x, y) # always a positive approximation error
+approx2 - logmean(x, y) # a negative approximation error in this case
+
+# A better approximation
+
+correction <- (log(x / y) / pi)^4 / 32
+approx1 / (1 + correction) - logmean(x, y)
 
 #--------------------
 

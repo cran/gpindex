@@ -43,16 +43,12 @@ Type 'q()' to quit R.
 > 
 > # Arithmetic mean
 > 
-> mean_arithmetic(x, w)
-[1] 2.25
-> stats::weighted.mean(x, w)
+> mean_arithmetic(x, w) # same as stats::weighted.mean(x, w)
 [1] 2.25
 > 
 > # Geometric mean
 > 
-> mean_geometric(x, w)
-[1] 2.059767
-> prod(x^w)
+> mean_geometric(x, w) # same as prod(x^w)
 [1] 2.059767
 > 
 > # Using prod() to manually calculate the geometric mean can give misleading
@@ -72,9 +68,7 @@ Type 'q()' to quit R.
 > 
 > # Harmonic mean
 > 
-> mean_harmonic(x, w)
-[1] 1.846154
-> 1 / stats::weighted.mean(1 / x, w)
+> mean_harmonic(x, w) # same as 1 / stats::weighted.mean(1 / x, w)
 [1] 1.846154
 > 
 > # Quadratic mean / root mean square
@@ -83,41 +77,64 @@ Type 'q()' to quit R.
 [1] 2.397916
 > 
 > # Cubic mean
+> # Notice that this is larger than the other means so far because the 
+> # generalized mean is increasing in r
 > 
 > mean_generalized(3)(x, w)
 [1] 2.506649
 > 
-> # This is larger than the other means so far because the generalized mean is
-> # increasing in r
-> 
 > #--------------------
 > 
-> # Example from Lord (2002) where the dispersion between arithmetic and 
-> # geometric means decreases as the variance increases
+> # The dispersion between the arithmetic, geometric, and harmonic mean usually
+> # increases as the variance in 'x' increases
 > 
-> x <- c((5 + sqrt(5)) / 4, (5 - sqrt(5)) / 4, 1 / 2)
-> y <- c((16 + 7 * sqrt(2)) / 16, (16 - 7 * sqrt(2)) / 16, 1)
+> x <- c(1, 3, 5)
+> y <- c(2, 3, 4)
 > 
 > stats::sd(x) > stats::sd(y)
 [1] TRUE
-> mean_arithmetic(x) - mean_geometric(x) < 
-+     mean_arithmetic(y) - mean_geometric(y)
+> 
+> mean_arithmetic(x) - mean_geometric(x)
+[1] 0.5337879
+> mean_arithmetic(y) - mean_geometric(y)
+[1] 0.1155009
+> 
+> mean_geometric(x) - mean_harmonic(x)
+[1] 0.5096903
+> mean_geometric(y) - mean_harmonic(y)
+[1] 0.1152684
+> 
+> # Example from Lord (2002) where the dispersion decreases as the variance increases,
+> # counter to the claims in Fisher (1922, p. 108) and the PPI manual (p. 28)
+> 
+> x <- (5 + c(sqrt(5), -sqrt(5), -3)) / 4
+> y <- (16 + c(7 * sqrt(2), -7 * sqrt(2), 0)) / 16
+> 
+> stats::sd(x) > stats::sd(y)
 [1] TRUE
 > 
-> #--------------------
+> mean_arithmetic(x) - mean_geometric(x)
+[1] 0.145012
+> mean_arithmetic(y) - mean_geometric(y)
+[1] 0.1485894
 > 
-> # When r < 1, the generalized mean is larger than the corresponding
-> # counter-harmonic (Lehmer) mean
+> mean_geometric(x) - mean_harmonic(x)
+[1] 0.104988
+> mean_geometric(y) - mean_harmonic(y)
+[1] 0.1439479
 > 
-> r <- -1
-> sum(w * x^r) / sum(w * x^(r - 1)) < mean_generalized(r)(x, w)
-[1] TRUE
+> # The "bias" in the arithmetic and harmonic indexes is also smaller in this case, 
+> # counter to the claim in Fisher (1922, p. 108)
 > 
-> # The reverse is true when r > 1
+> mean_arithmetic(x) * mean_arithmetic(1 / x) - 1
+[1] 0.3333333
+> mean_arithmetic(y) * mean_arithmetic(1 / y) - 1
+[1] 0.4135021
 > 
-> r <- 2
-> sum(w * x^r) / sum(w * x^(r - 1)) > mean_generalized(r)(x, w)
-[1] TRUE
+> mean_harmonic(x) * mean_harmonic(1 / x) - 1
+[1] -0.25
+> mean_harmonic(y) * mean_harmonic(1 / y) - 1
+[1] -0.2925373
 > 
 > #--------------------
 > 
@@ -129,7 +146,7 @@ Type 'q()' to quit R.
 [1] NA
 > mean_arithmetic(x, w, na.rm = TRUE) # drops the second observation
 [1] 0.936339
-> stats::weighted.mean(x, w, na.rm = TRUE)
+> stats::weighted.mean(x, w, na.rm = TRUE) # still returns NA
 [1] NA
 > 
 > #--------------------
@@ -139,15 +156,117 @@ Type 'q()' to quit R.
 > 
 > mean_arithmetic(c(1, 2, -3))
 Warning in mean_arithmetic(c(1, 2, -3)) :
-  Some elements of 'x' or 'w' are negative; the generalized mean is not defined
+  Some elements of 'x' or 'w' are less than or equal to 0; the generalized mean is not defined
 [1] 0
 > 
 > # Other times it's less obvious
 > 
 > mean_harmonic(c(1, 2, -3))
 Warning in mean_harmonic(c(1, 2, -3)) :
-  Some elements of 'x' or 'w' are negative; the generalized mean is not defined
+  Some elements of 'x' or 'w' are less than or equal to 0; the generalized mean is not defined
 [1] 2.571429
+> 
+> 
+> 
+> cleanEx()
+> nameEx("lehmer_mean")
+> ### * lehmer_mean
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: lehmer mean
+> ### Title: Lehmer mean
+> ### Aliases: mean_lehmer mean_contraharmonic
+> 
+> ### ** Examples
+> 
+> # Make some data
+> 
+> x <- 2:3
+> w <- c(0.25, 0.75)
+> 
+> # The Pythagorean means are special cases of the Lehmer mean
+> 
+> all.equal(mean_lehmer(1)(x, w), mean_arithmetic(x, w))
+[1] TRUE
+> all.equal(mean_lehmer(0)(x, w), mean_harmonic(x, w))
+[1] TRUE
+> all.equal(mean_lehmer(0.5)(x), mean_geometric(x))
+[1] TRUE
+> 
+> #--------------------
+> 
+> # When r < 1, the generalized mean is larger than the corresponding
+> # Lehmer mean
+> 
+> mean_lehmer(-1)(x, w) < mean_generalized(-1)(x, w)
+[1] TRUE
+> 
+> # The reverse is true when r > 1
+> 
+> mean_lehmer(3)(x, w) > mean_generalized(3)(x, w)
+[1] TRUE
+> 
+> # This implies the contraharmonic mean is larger than the quadratic
+> # mean, and therefore the Pythagorean means
+> 
+> mean_contraharmonic(x, w) > mean_arithmetic(x, w)
+[1] TRUE
+> mean_contraharmonic(x, w) > mean_geometric(x, w)
+[1] TRUE
+> mean_contraharmonic(x, w) > mean_harmonic(x, w)
+[1] TRUE
+> 
+> # and the logarithmic mean
+> 
+> mean_contraharmonic(2:3) > logmean(2, 3)
+[1] TRUE
+> 
+> # The difference between the arithmetic mean and contraharmonic mean
+> # is proportional to the variance of x
+> 
+> weighted_var <- function(x, w) mean_arithmetic(x^2, w) - mean_arithmetic(x, w)^2
+> 
+> mean_arithmetic(x, w) + weighted_var(x, w) / mean_arithmetic(x, w)
+[1] 2.818182
+> mean_contraharmonic(x, w)
+[1] 2.818182
+> 
+> #--------------------
+> 
+> # It is easy to modify the weights to turn a Lehmer mean of order r
+> # into a Lehmer mean of order s because the Lehmer mean can be expressed
+> # as an arithmetic mean
+> 
+> r <- 2
+> s <- -3
+> mean_lehmer(r)(x, w)
+[1] 2.818182
+> mean_lehmer(s)(x, w * x^(r - 1) / x^(s - 1))
+[1] 2.818182
+> 
+> # The weights can also be modified to turn a Lehmer mean of order r
+> # into a generalized mean of order s
+> 
+> mean_lehmer(r)(x, w)
+[1] 2.818182
+> mean_generalized(s)(x, weights_transmute(1, s)(x, w * x^(r - 1)))
+[1] 2.818182
+> 
+> # and vice versa
+> 
+> mean_lehmer(r)(x, weights_transmute(s, 1)(x, w) / x^(r - 1))
+[1] 2.568312
+> mean_generalized(s)(x, w)
+[1] 2.568312
+> 
+> #--------------------
+> 
+> # Quote contributions for a price index based on the Lehmer mean
+> # are easy to calculate
+> 
+> weights_scale(w * x^(r - 1)) * (x - 1)
+[1] 0.1818182 1.6363636
 > 
 > 
 > 
@@ -182,23 +301,6 @@ Warning in mean_harmonic(c(1, 2, -3)) :
 > all(logmean(x, y) < (x + y) / 2) & all(logmean(x, y) > sqrt(x * y))
 [1] TRUE
 > 
-> # It can be approximated as a convex combination of the arithmetic and 
-> # geometric means that gives more weight to the geometric mean
-> 
-> approx1 <- 1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
-> approx2 <- ((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
-> 
-> approx1 - logmean(x, y) # always a positive approximation error
-[1] 1.932965e-02 3.260257e-03 3.420021e-04 3.852275e-06
-> approx2 - logmean(x, y) # a negative approximation error
-[1] -6.436118e-02 -1.212079e-02 -1.336412e-03 -1.537117e-05
-> 
-> # A better approximation
-> 
-> correction <- (log(x / y) / pi)^4 / 32
-> approx1 / (1 + correction) - logmean(x, y)
-[1] -8.576372e-04  1.064231e-04  2.148563e-05  2.877344e-07
-> 
 > # The harmonic mean cannot be expressed as a logarithmic mean, but can be 
 > # expressed as an extended mean
 > 
@@ -209,6 +311,32 @@ Warning in mean_harmonic(c(1, 2, -3)) :
 > 
 > all.equal(mean_extended(2, 4)(x, y), sqrt(x^2 / 2 + y^2 / 2))
 [1] TRUE
+> 
+> # As are heronian and centroidal means
+> 
+> all.equal(mean_extended(0.5, 1.5)(x, y), (x + sqrt(x * y) + y) / 3)
+[1] TRUE
+> all.equal(mean_extended(2, 3)(x, y), 2 / 3 * (x^2 + x * y + y^2) / (x + y))
+[1] TRUE
+> 
+> #--------------------
+> 
+> # The logarithmic mean can be approximated as a convex combination of the 
+> # arithmetic and geometric means that gives more weight to the geometric mean
+> 
+> approx1 <- 1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
+> approx2 <- ((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
+> 
+> approx1 - logmean(x, y) # always a positive approximation error
+[1] 1.932965e-02 3.260257e-03 3.420021e-04 3.852275e-06
+> approx2 - logmean(x, y) # a negative approximation error in this case
+[1] -6.436118e-02 -1.212079e-02 -1.336412e-03 -1.537117e-05
+> 
+> # A better approximation
+> 
+> correction <- (log(x / y) / pi)^4 / 32
+> approx1 / (1 + correction) - logmean(x, y)
+[1] -8.576372e-04  1.064231e-04  2.148563e-05  2.877344e-07
 > 
 > #--------------------
 > 
@@ -249,6 +377,35 @@ Warning in mean_harmonic(c(1, 2, -3)) :
 [1] 2.466303
 > 1 / stats::integrate(function(t) 1 / (2 * (1 - t) + 3 * t), 0, 1)$value
 [1] 2.466303
+> 
+> 
+> 
+> cleanEx()
+> nameEx("nested_contributions")
+> ### * nested_contributions
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: nested contributions
+> ### Title: Nested contributions
+> ### Aliases: contributions_nested
+> 
+> ### ** Examples
+> 
+> p1 <- price6[[2]]
+> p0 <- price6[[1]]
+> q1 <- quantity6[[2]]
+> q0 <- quantity6[[1]]
+> 
+> contributions_fisher <- contributions_nested(0, c(1, -1))
+> contributions_fisher(p1 / p0, list(index_weights("Laspeyres")(p0, q0), 
++                                    index_weights("Paasche")(p1, q1)))
+[1]  0.01782865  0.18815627  0.05792735 -0.03414531  0.18217135 -0.01088828
+>                                    
+> contributions_hlp <- contributions_nested(-1, c(1, -1))
+> contributions_hlp(p1 / p0, list(index_weights("Laspeyres")(p0, q0), 
++                                 index_weights("Paasche")(p1, q1)))
+[1]  0.01781416  0.18807725  0.05791352 -0.03417296  0.18218584 -0.01089421
 > 
 > 
 > 
@@ -323,13 +480,6 @@ t5 1.0712    1.2477             0.9801 1.1850
 > mean_arithmetic(p1 / p0, index_weights("Laspeyres")(p0, q0)) 
 [1] 0.9609929
 > 
-> # Trivial to turn weights for an arithmetic index 
-> # into a basket-style index
-> 
-> qs <- index_weights("Laspeyres")(p0, q0) / p0
-> sum(p1 * qs) / sum(p0 * qs)
-[1] 0.9609929
-> 
 > # Harmonic calculation for the arithmetic Laspeyres
 > 
 > mean_harmonic(p1 / p0, index_weights("HybridLaspeyres")(p1, q0))
@@ -390,13 +540,9 @@ t5 1.0712    1.2477             0.9801 1.1850
 > 
 > # Quote contributions for the Fisher index
 > 
-> wl <- index_weights("Laspeyres")(p0, q0)
-> wp <- index_weights("Paasche")(p1, q1)
-> wf <- weights_transmute(0, 1)(c(mean_arithmetic(p1 / p0, wl), mean_harmonic(p1 / p0, wp)))
-> wf <- weights_scale(wf)
-> 
-> (con <- wf[1] * contributions_arithmetic(p1 / p0, wl) + 
-+           wf[2] * contributions_harmonic(p1 / p0, wp))
+> contributions_fisher <- contributions_nested(0, c(1, -1))
+> (con <- contributions_fisher(p1 / p0, list(index_weights("Laspeyres")(p0, q0), 
++                                            index_weights("Paasche")(p1, q1))))
 [1] -0.011708865 -0.130201104  0.024304224 -0.027406822  0.095185357
 [6] -0.009086373
 > 
@@ -407,6 +553,7 @@ t5 1.0712    1.2477             0.9801 1.1850
 > 
 > Qf <- quantity_index(index_fisher)(q1, q0, p1, p0)
 > Ql <- quantity_index(index_laspeyres)(q1, q0, p0)
+> wl <- index_weights("Laspeyres")(p0, q0)
 > wp <- index_weights("HybridPaasche")(p0, q1)
 > 
 > con2 <- (Qf / (Qf + Ql) * weights_scale(wl) + 
@@ -649,7 +796,8 @@ t5 1.0712    1.2477             0.9801 1.1850
 > #--------------------
 > 
 > # Any generalized index can be represented as a basket-style index
-> # by transmuting the weights
+> # by transmuting the weights, which is how some authors define a
+> # price index (e.g., Sydsaeter et al., 2005, p. 174)
 > 
 > p1 <- 2:6
 > p0 <- 1:5
@@ -687,7 +835,7 @@ t5 1.0712    1.2477             0.9801 1.1850
 > cleanEx()
 > options(digits = 7L)
 > base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  0.174 0.013 0.187 0 0 
+Time elapsed:  0.261 0.024 0.327 0 0 
 > grDevices::dev.off()
 null device 
           1 

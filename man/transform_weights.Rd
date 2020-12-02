@@ -95,12 +95,16 @@ Transmuting, factoring, and scaling weights will return a value that is the same
 Balk, B. M. (2008). \emph{Price and Quantity Index Numbers}. Cambridge University Press.
 
 ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Producer Price Index Manual: Theory and Practice}. International Monetary Fund.
+
+Sydsaeter, K., Strom, A., and Berck, P. (2005). \emph{Economists' Mathematical Manual} (4th edition). Springer.
 }
 
 \seealso{
 \code{\link[gpindex]{mean_generalized}} for the generalized mean. 
 
-\code{\link[gpindex]{mean_extended}} for the extended mean that underlies \code{weights_transmute()}. 
+\code{\link[gpindex]{mean_extended}} for the extended mean that underlies \code{weights_transmute()}.
+
+\code{\link[gpindex]{contributions_nested}} for an extension of \code{contributions()} to nested generalized means, like a Fisher index.
 }
 
 \examples{
@@ -170,7 +174,8 @@ isTRUE(all.equal(mean_arithmetic(x, perturb(transmute2(x), 0.1)),
 #--------------------
 
 # Any generalized index can be represented as a basket-style index
-# by transmuting the weights
+# by transmuting the weights, which is how some authors define a
+# price index (e.g., Sydsaeter et al., 2005, p. 174)
 
 p1 <- 2:6
 p0 <- 1:5
