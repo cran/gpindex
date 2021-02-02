@@ -20,7 +20,7 @@ contributions_nested(r1, r2, w1 = rep(1, length(r2)))
 }
 
 \details{
-This function is the analog of \code{\link[gpindex:contributions]{contributions()}} for a nested generalized mean with two levels, like a Fisher or Harmonic Laspeyres Paasche index. That is, it calculates the contribution of each element of \code{x} when a generalized mean of order \code{r1}, with weights \code{w1}, aggregates a collection of generalized means of \code{x} with orders in the list \code{r2}, each with weights in the list \code{w}.
+This function is the analog of \code{\link[=contributions]{contributions()}} for a nested generalized mean with two levels, like a Fisher or Harmonic Laspeyres Paasche index. That is, it calculates the contribution of each element of \code{x} when a generalized mean of order \code{r1}, with weights \code{w1}, aggregates a collection of generalized means of \code{x} with orders in the list \code{r2}, each with weights in the list \code{w}.
 }
 
 \value{
@@ -36,7 +36,7 @@ This function is experimental, and the interface may change in future versions.
 }
 
 \seealso{
-\code{\link[gpindex]{contributions}} for contributions without nesting.
+\code{\link{contributions}} for contributions without nesting.
 }
 
 \examples{

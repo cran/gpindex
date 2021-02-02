@@ -49,12 +49,12 @@ Both \code{x} and \code{w} should be strictly positive (and finite), especially 
 \enumerate{
 \item{The convention in Hardy et al. (1952, p. 13) is used in cases where \code{x} has zeros: the generalized mean is 0 whenever \code{w} is strictly positive and \code{r} < 0. (The analogous convention holds whenever at least one element of \code{x} is \code{Inf}: the generalized mean is \code{Inf} whenever \code{w} is strictly positive and \code{r > 0}.)} 
 
-\item{Some authors let \code{w} be non-negative and sum to 1 (e.g., Sydsaeter et al., 2005, p. 47). If \code{w} has zeros, then the corresponding element of \code{x} has no impact on the mean whenever \code{x} is strictly positive. Unlike \code{\link[stats:weighted.mean]{weighted.mean()}}, however, zeros in \code{w} are not strong zeros, so infinite values in \code{x} will propagate even if the corresponding elements of \code{w} are zero.} 
+\item{Some authors let \code{w} be non-negative and sum to 1 (e.g., Sydsaeter et al., 2005, p. 47). If \code{w} has zeros, then the corresponding element of \code{x} has no impact on the mean whenever \code{x} is strictly positive. Unlike \code{\link[=weighted.mean]{weighted.mean()}}, however, zeros in \code{w} are not strong zeros, so infinite values in \code{x} will propagate even if the corresponding elements of \code{w} are zero.} 
 }
 
-The weights should almost always be scaled to sum to 1 to satisfy the definition of a generalized mean, although there are certain types of price indexes where the weight should not be scaled (e.g., the Vartia-I index).
+The weights should almost always be scaled to sum to 1 to satisfy the definition of a generalized mean, although there are certain types of price indexes where the weights should not be scaled (e.g., the Vartia-I index).
 
-The underlying calculation returned by \code{mean_generalized()} is mostly identical to \code{\link[stats:weighted.mean]{weighted.mean()}}, with one important exception: missing values in the weights are not treated differently than missing values in \code{x}. Setting \code{na.rm = TRUE} drops missing values in both \code{x} and \code{w}, not just \code{x}. This ensures that certain useful identities are satisfied with missing values in \code{x}. In most cases \code{mean_arithmetic()} is a drop-in replacement for \code{\link[stats:weighted.mean]{weighted.mean()}}.
+The underlying calculation returned by \code{mean_generalized()} is mostly identical to \code{\link[=weighted.mean]{weighted.mean()}}, with one important exception: missing values in the weights are not treated differently than missing values in \code{x}. Setting \code{na.rm = TRUE} drops missing values in both \code{x} and \code{w}, not just \code{x}. This ensures that certain useful identities are satisfied with missing values in \code{x}. In most cases \code{mean_arithmetic()} is a drop-in replacement for \code{\link[=weighted.mean]{weighted.mean()}}.
 }
 
 \section{Warning}{
@@ -62,7 +62,7 @@ Passing very small values for \code{r} can give misleading results, and warning 
 }
 
 \note{
-\code{mean_generalized()} can be defined on the extended real line, so that \code{r = -Inf/Inf} returns \code{\link[base:min]{min()}}/\code{\link[base:max]{max()}}, to agree with the definition in, e.g., Bullen (2003). This is not implemented, and \code{r} must be finite.
+\code{mean_generalized()} can be defined on the extended real line, so that \code{r = -Inf/Inf} returns \code{\link[=min]{min()}}/\code{\link[=max]{max()}}, to agree with the definition in, e.g., Bullen (2003). This is not implemented, and \code{r} must be finite.
 
 There are a number of existing functions for calculating \emph{unweighted} geometric and harmonic means, namely the \code{geometric.mean()} and \code{harmonic.mean()} functions in the \code{'psych'} package, the \code{geomean()} function in the \code{'FSA'} package, the \code{GMean()} and \code{HMean()} functions in the \code{'DescTools'} package, and the \code{geoMean()} function in the \code{'EnvStats'} package. Similarly, the \code{ci_generalized_mean()} function in the \code{'Compind'} package calculates an \emph{unweighted} generalized mean.
 }
@@ -82,15 +82,17 @@ Sydsaeter, K., Strom, A., and Berck, P. (2005). \emph{Economists' Mathematical M
 }
 
 \seealso{
-\code{\link[gpindex]{logmean_generalized}} for the generalized logarithmic mean.
+\code{\link{logmean_generalized}} for the generalized logarithmic mean.
 
-\code{\link[gpindex]{mean_lehmer}} for the Lehmer mean, an alternative to the generalized mean.
+\code{\link{mean_lehmer}} for the Lehmer mean, an alternative to the generalized mean.
 
-\code{\link[gpindex]{weights_transmute}} transforms the weights to turn an r-generalized mean into an s-generalized mean. 
+\code{\link{weights_transmute}} transforms the weights to turn an r-generalized mean into an s-generalized mean. 
 
-\code{\link[gpindex]{weights_factor}} calculates the weights to factor a mean of products into a product of means.
+\code{\link{weights_factor}} calculates the weights to factor a mean of products into a product of means.
 
-\code{\link[gpindex]{price_index}} and \code{\link[gpindex]{quantity_index}} for simple wrappers that use \code{mean_generalized()} to calculate common indexes.
+\code{\link{price_index}} and \code{\link{quantity_index}} for simple wrappers that use \code{mean_generalized()} to calculate common indexes.
+
+\code{\link{back_price}}/\code{\link{base_price}} for a simple utility function to turn prices in a table into price relatives.
 }
 
 \examples{
@@ -135,12 +137,12 @@ mean_generalized(3)(x, w)
 #--------------------
 
 # The dispersion between the arithmetic, geometric, and harmonic mean usually
-# increases as the variance in 'x' increases
+# increases as the variance of 'x' increases
 
 x <- c(1, 3, 5)
 y <- c(2, 3, 4)
 
-stats::sd(x) > stats::sd(y)
+var(x) > var(y)
 
 mean_arithmetic(x) - mean_geometric(x)
 mean_arithmetic(y) - mean_geometric(y)
@@ -148,13 +150,19 @@ mean_arithmetic(y) - mean_geometric(y)
 mean_geometric(x) - mean_harmonic(x)
 mean_geometric(y) - mean_harmonic(y)
 
+# But the dispersion between these means is only bounded by
+# the variance (Bullen, 2003, p. 156)
+
+mean_arithmetic(x) - mean_geometric(x) >=  2 / 3 * var(x) / (2 * max(x))
+mean_arithmetic(x) - mean_geometric(x) <=  2 / 3 * var(x) / (2 * min(x))
+
 # Example from Lord (2002) where the dispersion decreases as the variance increases,
 # counter to the claims in Fisher (1922, p. 108) and the PPI manual (p. 28)
 
 x <- (5 + c(sqrt(5), -sqrt(5), -3)) / 4
 y <- (16 + c(7 * sqrt(2), -7 * sqrt(2), 0)) / 16
 
-stats::sd(x) > stats::sd(y)
+var(x) > var(y)
 
 mean_arithmetic(x) - mean_geometric(x)
 mean_arithmetic(y) - mean_geometric(y)
@@ -191,4 +199,25 @@ mean_arithmetic(c(1, 2, -3))
 # Other times it's less obvious
 
 mean_harmonic(c(1, 2, -3))
+
+#--------------------
+
+# A function to make the superlative quadratic mean price index in chapter 17, 
+# section B.5.1, of the PPI manual as a product of generalized means
+
+quadratic_index <- function(x, w0, w1, r) {
+  x <- sqrt(x) 
+  mean_generalized(r)(x, w0) * mean_generalized(-r)(x, w1)
+}
+
+quadratic_index(1:3, 4:6, 7:9, 2)
+
+# Same as the geometric mean of two generalized means (with the order halved)
+
+quadratic_index2 <- function(x, w0, w1, r) {
+  res <- c(mean_generalized(r)(x, w0), mean_generalized(-r)(x, w1))
+  mean_geometric(res)
+}
+
+quadratic_index2(1:3, 4:6, 7:9, 1)
 }

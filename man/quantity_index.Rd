@@ -12,7 +12,7 @@ quantity_index(price_index)
 }
 
 \arguments{
-\item{price_index}{A function to compute a price index. See \code{\link[gpindex]{price_index}}.}
+\item{price_index}{A function to compute a price index. See \code{\link{price_index}}.}
 }
 
 \value{
@@ -20,7 +20,7 @@ A function like \code{price_index}, except that the role of prices/quantities ha
 }
 
 \seealso{
-\code{\link[gpindex]{price_index}} for the possible functions that can serve as inputs.
+\code{\link{price_index}} for the possible functions that can serve as inputs.
 }
 
 \examples{

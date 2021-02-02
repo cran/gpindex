@@ -114,7 +114,7 @@ The \code{index_arithmetic()}, \code{index_geometric()}, and \code{index_harmoni
 \item Harmonic Young
 }
 
-Along with the \code{index_lm()} function to calculate the Lloyd-Moulton index, these are just convenient wrappers for \code{\link[gpindex:mean_generalized]{mean_generalized()}} and \code{index_weights()}. 
+Along with the \code{index_lm()} function to calculate the Lloyd-Moulton index, these are just convenient wrappers for \code{\link[=mean_generalized]{mean_generalized()}} and \code{index_weights()}. 
 
 The Laspeyres, Paasche, Jevons, Lowe, and Young indexes are among the most common price indexes, and so they get their own functions. The \code{index_laspeyres()}, \code{index_lowe()}, and \code{index_young()} functions correspond to setting the appropriate \code{type} in \code{index_arithmetic()}; \code{index_paasche()} and \code{index_jevons()} instead come from the \code{index_harmonic()} and \code{index_geometric()} functions.
 
@@ -160,13 +160,13 @@ ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Producer Price Index
 }
 
 \seealso{
-\code{\link[gpindex]{mean_generalized}} for the generalized mean. 
+\code{\link{mean_generalized}} for the generalized mean. 
 
-\code{\link[gpindex]{contributions}} for calculating quote contributions. 
+\code{\link{contributions}} for calculating quote contributions. 
 
-\code{\link[gpindex]{weights_factor}} for price-updating weights.
+\code{\link{weights_factor}} for price-updating weights.
 
-\code{\link[gpindex]{quantity_index}} to remap the arguments in these functions for a quanity index.
+\code{\link{quantity_index}} to remap the arguments in these functions for a quanity index.
 }
 
 \examples{

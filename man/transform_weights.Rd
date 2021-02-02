@@ -88,7 +88,7 @@ The function \code{weights_scale()} scales a vector of weights so they sum to 1 
 }
 
 \note{
-Transmuting, factoring, and scaling weights will return a value that is the same length as \code{x}, so any NAs in \code{x} or \code{w} will return NA. Unless all values are NA, however, the result for transmuting or factoring will still satisfy the above identities when \code{na.rm = TRUE} in \code{\link[gpindex:mean_generalized]{mean_generalized()}}. Similarly, the result of scaling will sum to 1 when NAs are removed.
+Transmuting, factoring, and scaling weights will return a value that is the same length as \code{x}, so any NAs in \code{x} or \code{w} will return NA. Unless all values are NA, however, the result for transmuting or factoring will still satisfy the above identities when \code{na.rm = TRUE} in \code{\link[=mean_generalized]{mean_generalized()}}. Similarly, the result of scaling will sum to 1 when NAs are removed.
 }
 
 \references{
@@ -100,11 +100,11 @@ Sydsaeter, K., Strom, A., and Berck, P. (2005). \emph{Economists' Mathematical M
 }
 
 \seealso{
-\code{\link[gpindex]{mean_generalized}} for the generalized mean. 
+\code{\link{mean_generalized}} for the generalized mean. 
 
-\code{\link[gpindex]{mean_extended}} for the extended mean that underlies \code{weights_transmute()}.
+\code{\link{mean_extended}} for the extended mean that underlies \code{weights_transmute()}.
 
-\code{\link[gpindex]{contributions_nested}} for an extension of \code{contributions()} to nested generalized means, like a Fisher index.
+\code{\link{contributions_nested}} for an extension of \code{contributions()} to nested generalized means, like a Fisher index.
 }
 
 \examples{
