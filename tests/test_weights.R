@@ -1,113 +1,57 @@
+library(gpindex)
+
 # Some data for tests
 set.seed(4321)
 x <- rnorm(15)^2
+xna <- replace(x, 2, NA)
 w <- runif(15, 0, 2)
 
-#---- Tests for weights_transmute ----
-stopifnot(
-  exprs = {
-    weights_transmute(2, 2)(x) == rep(1, length(x))
-    all.equal(weights_transmute(-2, -2)(x, w), w)
-    anyNA(weights_transmute(1, 1)(c(1, NA_real_)))
-    anyNA(weights_transmute(2, 1)(c(1, NA_real_)))
-    # Test against a simple implementation
-    apply(
-      expand.grid(a = seq(-10, 10, by = 0.5), b = seq(-10, 10, by = 0.5)),
-      1, function(p) {
-        w2 <- weights_transmute(p[1], p[2])(x, w)
-        M <- mean_generalized(p[1])(x, w)
-        w3 <- w * logmean_generalized(p[1])(x, M)^(p[1] - 1) /
-          logmean_generalized(p[2])(x, M)^(p[2] - 1)
-        all.equal(weights_scale(w2), weights_scale(w3))
-      })
-    # length 0 inputs
-    length(weights_transmute(1, 0)(numeric(0))) == 0
-    length(weights_transmute(1, 0)(numeric(0), numeric(0))) == 0
-    # NA_real_ inputs
-    # is.na(weights_transmute(1, 0)(NA_real_))
-    # is.na(weights_transmute(1, 0)(NA_real_, 1))
-    # is.na(weights_transmute(1, 0)(1, NA_real_))
-    # is.na(weights_transmute(1, 0)(NaN))
-    # is.na(weights_transmute(1, 0)(NaN, 1))
-    # is.na(weights_transmute(1, 0)(1, NaN))
-    # is.na(weights_transmute(1, 0)(NA_real_, NA_real_))
-    # is.na(weights_transmute(1, 0)(NaN, NaN))
-    # is.na(weights_transmute(1, 0)(NA_real_, NaN))
-    # is.na(weights_transmute(1, 0)(NaN, NA_real_))
-    identical(is.na(weights_transmute(1, 0)(c(1, NA_real_))), c(FALSE, TRUE))
-    identical(is.na(weights_transmute(1, 0)(c(1, NaN))), c(FALSE, TRUE))
-  },
-  local = getNamespace("gpindex")
-)
+#---- Tests for transmute_weights ----
+all.equal(transmute_weights(2, 2)(x), rep(1, length(x)))
+all.equal(transmute_weights(0, 0)(xna, w), replace(w, 2, NA))
+all.equal(transmute_weights(1, 1)(c(1, NA)), c(1, NA))
+all.equal(transmute_weights(2, 1)(c(1, NA)), c(1, NA))
+all.equal(transmute_weights(7, -3)(x, transmute_weights(-3, 7)(x, w)), w)
 
 #---- Tests for contributions ----
-stopifnot(
-  exprs = {
-    vapply(seq(-10, 10, by = 0.25),
-           function(r) {
-             x <- replace(x, 1, NA)
-             con <- contributions(r)(x, w)
-             all.equal(sum(con, na.rm = TRUE), mean_generalized(r)(x, w, na.rm = TRUE) - 1)
-           },
-           logical(1))
-    all.equal(contributions_arithmetic(1:4), c(0, 0.25, 0.5, 0.75))
-    all.equal(contributions_harmonic(1:4), c(0, 0.24, 0.32, 0.36))
-    all.equal(contributions_geometric(c(1, 4)), c(0, 1))
-  },
-  local = getNamespace("gpindex")
-)
+all.equal(arithmetic_contributions(1:4), c(0, 0.25, 0.5, 0.75))
+all.equal(harmonic_contributions(1:4), c(0, 0.24, 0.32, 0.36))
+all.equal(geometric_contributions(c(1, 4)), c(0, 1))
+all.equal(sum(contributions(-3.75)(x, w)), generalized_mean(-3.75)(x, w) - 1)
+all.equal(sum(contributions(3.75)(xna, w), na.rm = TRUE), generalized_mean(3.75)(xna, w, na.rm = TRUE) - 1)
+    
+#---- Tests for factor_weights ----
+all.equal(factor_weights(0)(c(1, NA)), c(1, NA))
+all.equal(factor_weights(0)(x), rep(1, length(x)))
+all.equal(factor_weights(0)(x, w), w)
+all.equal(update_weights(xna, w), xna * w)
 
-#---- Test for weights_factor ----
-stopifnot(
-  exprs = {
-    anyNA(weights_factor(0)(c(1, NA_real_)))
-    # test against known cases
-    all(weights_factor(0)(x) == 1)
-    all(weights_factor(0)(x, w) == w)
-    all(weights_factor(1)(x, w) == x * w)
-    all(weights_update(x, w) == x * w)
-    # test against a simple implementation
-    vapply(seq(-10, 10, by = 0.25),
-           function(r) {
-             w2 <- weights_factor(r)(x, w)
-             w3 <- w * x^r
-             all.equal(w2, w3)
-           },
-           logical(1))
-    # test NA_real_ and length-0 inputs
-    # is.na(weights_update(NA_real_))
-    # is.na(weights_update(NA_real_, NA_real_))
-    # is.na(weights_update(NaN))
-    # is.na(weights_update(NaN, NaN))
-    # is.na(weights_update(NA_real_, NaN))
-    # is.na(weights_update(NaN, NA_real_))
-    # is.na(weights_update(1, NaN))
-    # is.na(weights_update(1, NA_real_))
-    # is.na(weights_update(NA_real_, 1))
-    # is.na(weights_update(NaN, 1))
-    length(weights_update(numeric(0))) == 0
-    length(weights_update(numeric(0), numeric(0))) == 0
-  },
-  local = getNamespace("gpindex")
-)
+#---- Tests for scale_weights ----
+all.equal(sum(scale_weights(w)), 1)
+all.equal(scale_weights(c(1:2, NA)), c(1:2, NA) / 3)
 
-#---- Test for weights_scale ----
-stopifnot(
-  exprs = {
-    all.equal(weights_scale(1:4), 1:4 / 10)
-    all.equal(sum(weights_scale(w)), 1)
-    all.equal(weights_scale(c(1:2, NA_real_)), c(1:2, NA_real_) / 3)
-    all.equal(sum(weights_scale(c(1:2, NA_real_)), na.rm = TRUE), 1)
-    length(weights_scale(numeric(0))) == 0
-  },
-  local = getNamespace("gpindex")
-)
+#---- Tests for nested_contributions ----
+all.equal(sum(nested_contributions(3, c(-1, 2), c(0.75, 0.25))(x)),
+          generalized_mean(3)(c(harmonic_mean(x), generalized_mean(2)(x)), c(0.75, 0.25)) - 1)
 
-#---- Tests for contributions_nested ----
-stopifnot(
-  exprs = {
-    all.equal(sum(contributions_nested(3, c(-1, 0, 2))(x)),
-              mean_generalized(3)(c(mean_harmonic(x), mean_geometric(x), mean_generalized(2)(x))) - 1)
-  },
-  local = getNamespace("gpindex")
-)
+all.equal(sum(nested_contributions2(3, c(-1, 2), c(0.75, 0.25))(x)),
+          generalized_mean(3)(c(harmonic_mean(x), generalized_mean(2)(x)), c(0.75, 0.25)) - 1)
+
+all.equal(sum(nested_contributions(0, c(1, -1), c(0.5, 0.5))(x)),
+          prod(sqrt(c(harmonic_mean(x), arithmetic_mean(x)))) - 1)
+
+all.equal(nested_contributions(1, c(0, -1), c(1, 2))(xna, x, w),
+          nested_contributions2(1, c(0, -1), c(1, 2))(xna, x, w))
+
+all.equal(sum(nested_contributions(1, c(0, -1), c(1, 2))(xna, x, w), na.rm = TRUE),
+          nested_mean(1, c(0, -1), c(1, 2))(xna, x, w, na.rm = TRUE) - 1)
+
+all.equal(sum(nested_contributions(0, c(3, -2))(xna, w, xna), na.rm = TRUE),
+          nested_mean(0, c(3, -2))(xna, w, xna, na.rm = TRUE) - 1)
+
+all.equal(sum(nested_contributions2(0, c(3, -2))(xna, w, xna), na.rm = TRUE),
+          nested_mean(0, c(3, -2))(xna, w, xna, na.rm = TRUE) - 1)
+
+# TODO: Is this correct? I think it only happens when one set of weights is all NA
+all.equal(fisher_contributions(1:2, c(NA, NA)), c(0, 1 / 3))
+all.equal(fisher_contributions2(1:2, c(NA, NA)), c(NaN, NaN))

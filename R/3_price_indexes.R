@@ -22,17 +22,21 @@ index_weights <- function(type = c("Carli", "Jevons", "Coggeshall",
     Palgrave = ,
     Paasche = function(p1, q1) p1 * q1,
     HybridPaasche = function(p0, q1) p0 * q1,
-    Drobish = function(p1, p0, q1, q0) (p0 * q0 / v(p0, q0) + p0 * q1 / v(p0, q1)) / 2,
+    Drobish = function(p1, p0, q1, q0) 
+      (p0 * q0 / v(p0, q0) + p0 * q1 / v(p0, q1)) / 2,
     Unnamed = ,
-    Tornqvist = function(p1, p0, q1, q0) (p0 * q0 / v(p0, q0) + p1 * q1 / v(p1, q1)) / 2,
+    Tornqvist = function(p1, p0, q1, q0) 
+      (p0 * q0 / v(p0, q0) + p1 * q1 / v(p1, q1)) / 2,
     Walsh1 = function(p0, q1, q0) p0 * sqrt(q0 * q1),
     Walsh2 = function(p1, p0, q1, q0) sqrt(p0 * q0 * p1 * q1),
     MarshallEdgeworth = function(p0, q1, q0) p0 * (q0 + q1),
     GearyKhamis = function(p0, q1, q0) p0 / (1 / q0 + 1 / q1),
     Vartia1 = ,
-    MontgomeryVartia = function(p1, p0, q1, q0) logmean(p0 * q0, p1 * q1) / logmean(v(p0, q0), v(p1, q1)),
+    MontgomeryVartia = function(p1, p0, q1, q0) 
+      logmean(p0 * q0, p1 * q1) / logmean(v(p0, q0), v(p1, q1)),
     Vartia2 = ,
-    SatoVartia = function(p1, p0, q1, q0) logmean(p0 * q0 / v(p0, q0), p1 * q1 / v(p1, q1))
+    SatoVartia = function(p1, p0, q1, q0) 
+      logmean(p0 * q0 / v(p0, q0), p1 * q1 / v(p1, q1))
   )
   # clean up enclosing environment
   environment(res) <- getNamespace("gpindex")
@@ -40,7 +44,7 @@ index_weights <- function(type = c("Carli", "Jevons", "Coggeshall",
 }
 
 #---- Pythagorean indexes ----
-index_pythagorean <- function(class = c("arithmetic", "geometric", "harmonic")) {
+pythagorean_index <- function(class = c("arithmetic", "geometric", "harmonic")) {
   types <- switch(match.arg(class),
                   arithmetic = c("Carli", "Dutot", "Laspeyres",
                                  "Palgrave", "Drobish", "Unnamed",
@@ -51,10 +55,10 @@ index_pythagorean <- function(class = c("arithmetic", "geometric", "harmonic")) 
                                 "Vartia2", "SatoVartia", "Walsh2",
                                 "Young"),
                   harmonic = c("Coggeshall", "Laspeyres", "Paasche", "Young"))
+  r <- switch(class, arithmetic = 1, geometric = 0, harmonic = -1)
   # return function
   function(type) {
     type <- match.arg(type, types)
-    r <- switch(class, arithmetic = 1, geometric = 0, harmonic = -1)
     # return function
     res <- switch(
       type,
@@ -62,30 +66,30 @@ index_pythagorean <- function(class = c("arithmetic", "geometric", "harmonic")) 
       Dutot = ,
       Jevons = ,
       Coggeshall = function(p1, p0, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(p0), na.rm),
+        generalized_mean(r)(p1 / p0, index_weights(type)(p0), na.rm),
       Laspeyres = function(p1, p0, q0, na.rm = FALSE) 
-        mean_generalized(r)(p1 / p0, index_weights(type)(p0, q0), na.rm),
+        generalized_mean(r)(p1 / p0, index_weights(type)(p0, q0), na.rm),
       Paasche = ,
       Palgrave = function(p1, p0, q1, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(p1, q1), na.rm),
+        generalized_mean(r)(p1 / p0, index_weights(type)(p1, q1), na.rm),
       Drobish = ,
       Unnamed = ,
       Vartia2 = ,
       SatoVartia = ,
       Walsh2 = ,
       Tornqvist = function(p1, p0, q1, q0, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(p1, p0, q1, q0), na.rm),
+        generalized_mean(r)(p1 / p0, index_weights(type)(p1, p0, q1, q0), na.rm),
       Vartia1 = ,
       MontgomeryVartia = function(p1, p0, q1, q0, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(p1, p0, q1, q0), na.rm, FALSE),
+        exp(sum(log(p1 / p0) * index_weights(type)(p1, p0, q1, q0), na.rm = na.rm)),
       Walsh1 = ,
       MarshallEdgeworth = ,
       GearyKhamis = function(p1, p0, q1, q0, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(p0, q1, q0), na.rm),
+        generalized_mean(r)(p1 / p0, index_weights(type)(p0, q1, q0), na.rm),
       Lowe = function(p1, p0, qb, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(p0, qb), na.rm),
+        generalized_mean(r)(p1 / p0, index_weights(type)(p0, qb), na.rm),
       Young = function(p1, p0, pb, qb, na.rm = FALSE)
-        mean_generalized(r)(p1 / p0, index_weights(type)(pb, qb), na.rm)
+        generalized_mean(r)(p1 / p0, index_weights(type)(pb, qb), na.rm)
     )
     # clean up enclosing environment
     enc <- list(r = r, type = type)
@@ -94,66 +98,83 @@ index_pythagorean <- function(class = c("arithmetic", "geometric", "harmonic")) 
   }
 }
 
-index_arithmetic <- index_pythagorean("arithmetic")
+arithmetic_index <- pythagorean_index("arithmetic")
 
-index_geometric <- index_pythagorean("geometric")
+geometric_index <- pythagorean_index("geometric")
 
-index_harmonic <- index_pythagorean("harmonic")
+harmonic_index <- pythagorean_index("harmonic")
 
 #---- Common indexes ----
-index_laspeyres <- index_arithmetic("Laspeyres")
+laspeyres_index <- arithmetic_index("Laspeyres")
 
-index_paasche <- index_harmonic("Paasche")
+paasche_index <- harmonic_index("Paasche")
 
-index_jevons <- index_geometric("Jevons")
+jevons_index <- geometric_index("Jevons")
 
-index_lowe <- index_arithmetic("Lowe")
+lowe_index <- arithmetic_index("Lowe")
 
-index_young <- index_arithmetic("Young")
+young_index <- arithmetic_index("Young")
 
 #---- Fisher index ----
-index_fisher <- function(p1, p0, q1, q0, na.rm = FALSE) {
-  sqrt(index_laspeyres(p1, p0, q0, na.rm) * index_paasche(p1, p0, q1, na.rm))
+fisher_index <- function(p1, p0, q1, q0, na.rm = FALSE) {
+  wl <- index_weights("Laspeyres")(p0, q0)
+  wp <- index_weights("Paasche")(p1, q1)
+  fisher_mean(p1 / p0, wl, wp, na.rm)
 }
 
 #---- Harmonic Laspeyres Paasche index ----
-index_hlp <- function(p1, p0, q1, q0, na.rm = FALSE) {
-  2 / (1 / index_laspeyres(p1, p0, q0, na.rm) + 1 / index_paasche(p1, p0, q1, na.rm))
+hlp_index <- function(p1, p0, q1, q0, na.rm = FALSE) {
+  wl <- index_weights("Laspeyres")(p0, q0)
+  wp <- index_weights("Paasche")(p1, q1)
+  nested_mean(-1, c(1, -1))(p1 / p0, wl, wp, na.rm)
 }
 
 #---- Lloyd Moulton index ----
-index_lm <- function(p1, p0, q0, elasticity, na.rm = FALSE) {
-  mean_generalized(1 - elasticity)(p1 / p0, index_weights("LloydMoulton")(p0, q0), na.rm)
+lm_index <- function(p1, p0, q0, elasticity, na.rm = FALSE) {
+  w <- index_weights("LloydMoulton")(p0, q0)
+  generalized_mean(1 - elasticity)(p1 / p0, w, na.rm)
 }
 
 #---- Caruthers Sellwood Ward Dalen index ----
-index_cswd <- function(p1, p0, na.rm = FALSE) {
-  rel <- p1 / p0
-  sqrt(mean_arithmetic(rel, na.rm = na.rm) * mean_harmonic(rel, na.rm = na.rm))
+cswd_index <- function(p1, p0, na.rm = FALSE) {
+  fisher_mean(p1 / p0, na.rm = na.rm)
 }
 
 #---- Caruthers Sellwood Ward Dalen Balk index ----
-index_cswdb <- function(p1, p0, q1, q0, na.rm = FALSE) {
-  sqrt(mean_arithmetic(p1 / p0, na.rm = na.rm) /
-         mean_arithmetic(q1 / q0, na.rm = na.rm) *
-         mean_arithmetic(p1 * q1 / (p0 * q0), na.rm = na.rm))
+cswdb_index <- function(p1, p0, q1, q0, na.rm = FALSE) {
+  sqrt(arithmetic_mean(p1 / p0, na.rm = na.rm) /
+         arithmetic_mean(q1 / q0, na.rm = na.rm) *
+         arithmetic_mean(p1 * q1 / (p0 * q0), na.rm = na.rm))
 }
 
 #---- Balk Walsh index ----
-index_bw <- function(p1, p0, na.rm = FALSE) {
+bw_index <- function(p1, p0, na.rm = FALSE) {
   rel <- sqrt(p1 / p0)
-  mean_arithmetic(rel, na.rm = na.rm) * mean_harmonic(rel, na.rm = na.rm)
+  arithmetic_mean(rel, na.rm = na.rm) * harmonic_mean(rel, na.rm = na.rm)
 }
 
 #---- Generalized Stuval index ----
-index_stuval <- function(a, b) {
+stuval_index <- function(a, b) {
   if (!is_number(a) || !is_number(b)) {
-    stop("'a' and 'b' must be a finite length 1 numerics")
+    stop("'a' and 'b' must be finite length 1 numerics")
   }
   function(p1, p0, q1, q0, na.rm = FALSE) {
-    pl <- index_laspeyres(p1, p0, q0, na.rm)
-    ql <- index_laspeyres(q1, q0, p0, na.rm)
+    pl <- laspeyres_index(p1, p0, q0, na.rm)
+    ql <- laspeyres_index(q1, q0, p0, na.rm)
     v <- sum(p1 * q1, na.rm = na.rm) / sum(p0 * q0, na.rm = na.rm)
     (pl - b / a * ql) / 2 + sqrt((pl - b / a * ql)^2 / 4 + b / a * v)
   }
 }
+
+#---- AG mean index ----
+agmean_index <- function(r) {
+  force(r)
+  function(p1, p0, q0, elasticity, na.rm = FALSE) {
+    w <- index_weights("Laspeyres")(p0, q0)
+    nested_mean(r, c(0, 1), c(elasticity, 1 - elasticity))(p1 / p0, w, w, na.rm)
+  }
+}
+
+arithmetic_agmean_index <- agmean_index(1)
+
+geometric_agmean_index <- agmean_index(0)

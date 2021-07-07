@@ -1,0 +1,112 @@
+
+R version 4.0.5 (2021-03-31) -- "Shake and Throw"
+Copyright (C) 2021 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(gpindex)
+>
+> set.seed(4321)
+> 
+> #---- Tests for offsetting prices ----
+> # Make some data for the tests
+> price <- 1:10
+> id <- letters[c(5:1, 1:5)]
+> period <- rep(1:2, each = 5)
+> names(price) <- id
+> 
+> back_price(NULL, NULL, NULL)
+NULL
+> back_price(1:4, rep(1, 4))
+[1] 1 1 1 1
+Warning message:
+In back_price(1:4, rep(1, 4)) : there are duplicated period-product pairs
+> back_price(matrix(1:4), rep(1, 4))
+     [,1]
+[1,]    1
+[2,]    1
+[3,]    1
+[4,]    1
+Warning message:
+In back_price(matrix(1:4), rep(1, 4)) :
+  there are duplicated period-product pairs
+> back_price(1:4, factor(rep(1, 4), levels = 0:1))
+[1] NA NA NA NA
+Warning message:
+In back_price(1:4, factor(rep(1, 4), levels = 0:1)) :
+  there are duplicated period-product pairs
+> back_price(1:4, 1:4)
+[1] 1 1 2 3
+> base_price(1:4, 1:4)
+[1] 1 1 1 1
+> back_price(1:4, factor(1:4, levels = 4:1))
+[1] 2 3 4 4
+> back_price(price, period, id)
+e d c b a a b c d e 
+1 2 3 4 5 5 4 3 2 1 
+> back_price(price, replace(period, 2, NA), id)
+ e  d  c  b  a  a  b  c  d  e 
+ 1 NA  3  4  5  5  4  3 NA  1 
+> back_price(price[-1], period[-1], id[-1])
+ d  c  b  a  a  b  c  d  e 
+ 2  3  4  5  5  4  3  2 NA 
+> back_price(price, period, replace(id, 1, NA))
+ e  d  c  b  a  a  b  c  d  e 
+NA  2  3  4  5  5  4  3  2 NA 
+> back_price(replace(price, 1, NA), period, id)
+ e  d  c  b  a  a  b  c  d  e 
+NA  2  3  4  5  5  4  3  2 NA 
+>
+> #---- Tests for outliers ----
+> x <- log(runif(100, 0.1, 10))
+>
+> all.equal(fixed_cutoff(x), x > 2.5 | x < 1 / 2.5)
+[1] TRUE
+> all.equal(quartile_method(x), x > median(x) + (quantile(x, 0.75) - quantile(x, 0.5)) * 2.5 |
++             x < median(x) - (quantile(x, 0.5) - quantile(x, 0.25)) * 2.5)
+[1] TRUE
+> all.equal(quartile_method(x, a = c(0, 1)), x > median(x) + c((quantile(x, 0.75) - quantile(x, 0.5)), median(x)) * 2.5 |
++               x < median(x) - c((quantile(x, 0.5) - quantile(x, 0.25)), median(x)) * 2.5)
+[1] TRUE
+> all.equal(resistant_fences(x), x > quantile(x, 0.75) + (quantile(x, 0.75) - quantile(x, 0.25)) * 2.5 |
++             x < quantile(x, 0.25) - (quantile(x, 0.75) - quantile(x, 0.25)) * 2.5)
+[1] TRUE
+> sum(resistant_fences(x)) <= sum(quartile_method(x))
+[1] TRUE
+> all.equal(robust_z(x), abs(x - median(x)) / mad(x) > 2.5)
+[1] TRUE
+>
+> x <- seq(0.1, 2, by = 0.2)
+>
+> all.equal(hb_transform(x), ifelse(x < median(x), 1 - median(x) / x, x / median(x) - 1))
+[1] TRUE
+> hb_transform(x - 1)
+[1] 1.000000e+00 1.000000e+00 1.000000e+00 1.000000e+00 1.000000e+00 
+[6] 1.801440e+15 5.404320e+15 9.007199e+15 1.261008e+16 1.621296e+16
+Warning message:
+In hb_transform(x - 1) : 
+   some elements of 'x' are less than or equal to 0; the Hidiroglou-Berthelot transformation is not defined
+>
+> all.equal(tukey_algorithm(integer(0)), logical(0))
+[1] TRUE
+> all.equal(tukey_algorithm(2), FALSE)
+[1] TRUE
+> all.equal(tukey_algorithm(x), c(TRUE, rep(FALSE, 8), TRUE))
+[1] TRUE
+> all.equal(tukey_algorithm(c(NA, 1, 2, 3)), c(NA, T, F, T))
+[1] TRUE
+>
+> proc.time()
+   user  system elapsed 
+  0.316   0.211   0.319 

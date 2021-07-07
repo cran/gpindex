@@ -1,20 +1,22 @@
 \name{price indexes}
 \alias{price_index}
-\alias{index_arithmetic}
-\alias{index_geometric}
-\alias{index_harmonic}
-\alias{index_laspeyres}
-\alias{index_paasche}
-\alias{index_jevons}
-\alias{index_lowe}
-\alias{index_young}
-\alias{index_fisher}
-\alias{index_hlp}
-\alias{index_lm}
-\alias{index_cswd}
-\alias{index_cswdb}
-\alias{index_bw}
-\alias{index_stuval}
+\alias{arithmetic_index}
+\alias{geometric_index}
+\alias{harmonic_index}
+\alias{laspeyres_index}
+\alias{paasche_index}
+\alias{jevons_index}
+\alias{lowe_index}
+\alias{young_index}
+\alias{fisher_index}
+\alias{hlp_index}
+\alias{lm_index}
+\alias{arithmetic_agmean_index}
+\alias{geometric_agmean_index}
+\alias{cswd_index}
+\alias{cswdb_index}
+\alias{bw_index}
+\alias{stuval_index}
 \alias{index_weights}
 
 \title{Price indexes}
@@ -24,35 +26,39 @@ Calculate a variety of price indexes using information on prices and quantities.
 }
 
 \usage{
-index_arithmetic(type)
+arithmetic_index(type)
 
-index_geometric(type)
+geometric_index(type)
 
-index_harmonic(type)
+harmonic_index(type)
 
-index_laspeyres(p1, p0, q0, na.rm = FALSE)
+laspeyres_index(p1, p0, q0, na.rm = FALSE)
 
-index_paasche(p1, p0, q1, na.rm = FALSE)
+paasche_index(p1, p0, q1, na.rm = FALSE)
 
-index_jevons(p1, p0, na.rm = FALSE)
+jevons_index(p1, p0, na.rm = FALSE)
 
-index_lowe(p1, p0, qb, na.rm = FALSE)
+lowe_index(p1, p0, qb, na.rm = FALSE)
 
-index_young(p1, p0, pb, qb, na.rm = FALSE)
+young_index(p1, p0, pb, qb, na.rm = FALSE)
 
-index_fisher(p1, p0, q1, q0, na.rm = FALSE)
+fisher_index(p1, p0, q1, q0, na.rm = FALSE)
 
-index_hlp(p1, p0, q1, q0, na.rm = FALSE)
+hlp_index(p1, p0, q1, q0, na.rm = FALSE)
 
-index_lm(p1, p0, q0, elasticity, na.rm = FALSE)
+lm_index(p1, p0, q0, elasticity, na.rm = FALSE)
 
-index_cswd(p1, p0, na.rm = FALSE)
+arithmetic_agmean_index(p1, p0, q0, elasticity, na.rm = FALSE)
 
-index_cswdb(p1, p0, q1, q0, na.rm = FALSE)
+geometric_agmean_index(p1, p0, q0, elasticity, na.rm = FALSE)
 
-index_bw(p1, p0, na.rm = FALSE)
+cswd_index(p1, p0, na.rm = FALSE)
 
-index_stuval(a, b)
+cswdb_index(p1, p0, q1, q0, na.rm = FALSE)
+
+bw_index(p1, p0, na.rm = FALSE)
+
+stuval_index(a, b)
 
 index_weights(type)
 }
@@ -72,19 +78,15 @@ index_weights(type)
 
 \item{qb}{Period-b quantities for the Lowe/Young index.}
 
-\item{na.rm}{Should missing values be removed?}
+\item{na.rm}{Should missing values be removed? By default missing values for prices or quantities return a missing value.}
 
-\item{elasticity}{The elasticity of substitution for the Lloyd-Moulton index.}
+\item{elasticity}{The elasticity of substitution for the Lloyd-Moulton and AG mean indexes.}
 
 \item{a, b}{Parameters for the generalized Stuval index.}
 }
 
-\value{
-\code{index_arithmetic()}, \code{index_geometric()}, \code{index_harmonic()}, \code{index_stuval()}, and \code{index_weights()} each return a function; the others return a numeric value.
-}
-
 \details{
-The \code{index_arithmetic()}, \code{index_geometric()}, and \code{index_harmonic()} functions return a function to calculate a given type of arithmetic, geometric, and harmonic index. Together, these functions produce functions to calculate the following indexes.
+The \code{arithmetic_index()}, \code{geometric_index()}, and \code{harmonic_index()} functions return a function to calculate a given type of arithmetic, geometric, and harmonic index. Together, these functions produce functions to calculate the following indexes.
 \itemize{
 \item \bold{Arithmetic indexes}
 \item Carli
@@ -114,11 +116,11 @@ The \code{index_arithmetic()}, \code{index_geometric()}, and \code{index_harmoni
 \item Harmonic Young
 }
 
-Along with the \code{index_lm()} function to calculate the Lloyd-Moulton index, these are just convenient wrappers for \code{\link[=mean_generalized]{mean_generalized()}} and \code{index_weights()}. 
+Along with the \code{lm_index()} function to calculate the Lloyd-Moulton index, these are just convenient wrappers for \code{\link[=generalized_mean]{generalized_mean()}} and \code{index_weights()}. 
 
-The Laspeyres, Paasche, Jevons, Lowe, and Young indexes are among the most common price indexes, and so they get their own functions. The \code{index_laspeyres()}, \code{index_lowe()}, and \code{index_young()} functions correspond to setting the appropriate \code{type} in \code{index_arithmetic()}; \code{index_paasche()} and \code{index_jevons()} instead come from the \code{index_harmonic()} and \code{index_geometric()} functions.
+The Laspeyres, Paasche, Jevons, Lowe, and Young indexes are among the most common price indexes, and so they get their own functions. The \code{laspeyres_index()}, \code{lowe_index()}, and \code{young_index()} functions correspond to setting the appropriate \code{type} in \code{arithmetic_index()}; \code{paasche_index()} and \code{jevons_index()} instead come from the \code{harmonic_index()} and \code{geometric_index()} functions.
 
-In addition to these generalized indexes, there are also functions for calculating a variety of non-generalized indexes. The Fisher index is the geometric mean of the arithmetic Laspeyres and Paasche indexes; the Harmonic Laspeyres Paasche index is the harmonic analog of the Fisher index. The Carruthers-Sellwood-Ward-Dalen and Carruthers-Sellwood-Ward-Dalen-Balk indexes are sample analogs of the Fisher index; the Balk-Walsh index is the sample analog of the Walsh index. The \code{index_stuval()} function returns a function to calculate a Stuval index of the given parameters.
+In addition to these generalized-mean indexes, there are also functions for calculating a variety of non-generalized-mean indexes. The Fisher index is the geometric mean of the arithmetic Laspeyres and Paasche indexes; the Harmonic Laspeyres Paasche index is the harmonic analog of the Fisher index. The Carruthers-Sellwood-Ward-Dalen and Carruthers-Sellwood-Ward-Dalen-Balk indexes are sample analogs of the Fisher index; the Balk-Walsh index is the sample analog of the Walsh index. The AG mean index is the arithmetic or geometric mean of the geometric and arithmetic Laspeyres indexes, weighted by the elasticity of substitution. The \code{stuval_index()} function returns a function to calculate a Stuval index of the given parameters.
 
 The \code{index_weights()} function returns a function to calculate weights for a variety of price indexes. Weights for the following types of indexes can be calculated.
 \itemize{
@@ -142,7 +144,11 @@ The \code{index_weights()} function returns a function to calculate weights for 
 
 The weights need not sum to 1, as this normalization isn't always appropriate (i.e., for the Vartia-I weights).
 
-Naming for the indexes and weights generally follows the CPI/PPI manual and Balk (2008). In several cases two or more names correspond to the same weights (e.g., Paasche and Palgrave, or Sato-Vartia and Vartia-II). The calculations are given in the examples.
+Naming for the indexes and weights generally follows the CPI manual and Balk (2008). In several cases two or more names correspond to the same weights (e.g., Paasche and Palgrave, or Sato-Vartia and Vartia-II). The calculations are given in the examples.
+}
+
+\value{
+\code{arithmetic_index()}, \code{geometric_index()}, \code{harmonic_index()}, \code{stuval_index()}, and \code{index_weights()} each return a function to compute the relevant price indexes; the others return a numeric value giving the change in price between the base period and current period.
 }
 
 \note{
@@ -154,24 +160,20 @@ The approach taken when \code{na.rm = TRUE} removes price relatives with missing
 \references{
 Balk, B. M. (2008). \emph{Price and Quantity Index Numbers}. Cambridge University Press.
 
-ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Consumer Price Index Manual: Theory and Practice}. International Monetary Fund.
-
-ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Producer Price Index Manual: Theory and Practice}. International Monetary Fund.
+ILO, IMF, OECD, Eurostat, UN, and World Bank. (2020). \emph{Consumer Price Index Manual: Theory and Practice}. International Monetary Fund.
 }
 
 \seealso{
-\code{\link{mean_generalized}} for the generalized mean. 
+\code{\link{generalized_mean}} for the generalized mean. 
 
 \code{\link{contributions}} for calculating quote contributions. 
 
-\code{\link{weights_factor}} for price-updating weights.
+\code{\link{update_weights}} for price-updating weights.
 
-\code{\link{quantity_index}} to remap the arguments in these functions for a quanity index.
+\code{\link{quantity_index}} to remap the arguments in these functions for a quantity index.
 }
 
 \examples{
-# Make some data
-
 p0 <- price6[[2]]
 p1 <- price6[[3]]
 q0 <- quantity6[[2]]
@@ -179,26 +181,28 @@ q1 <- quantity6[[3]]
 pb <- price6[[1]]
 qb <- quantity6[[1]]
 
+#---- Calculating price indexes ----
+
 # Most indexes can be calculated by combining the appropriate weights with
 # the correct type of mean
 
-index_geometric("Laspeyres")(p1, p0, q0)
-mean_geometric(p1 / p0, index_weights("Laspeyres")(p0, q0))
+geometric_index("Laspeyres")(p1, p0, q0)
+geometric_mean(p1 / p0, index_weights("Laspeyres")(p0, q0))
 
 # Arithmetic Laspeyres index
 
-index_laspeyres(p1, p0, q0)
-mean_arithmetic(p1 / p0, index_weights("Laspeyres")(p0, q0)) 
+laspeyres_index(p1, p0, q0)
+arithmetic_mean(p1 / p0, index_weights("Laspeyres")(p0, q0)) 
 
 # Harmonic calculation for the arithmetic Laspeyres
 
-mean_harmonic(p1 / p0, index_weights("HybridLaspeyres")(p1, q0))
+harmonic_mean(p1 / p0, index_weights("HybridLaspeyres")(p1, q0))
 
 # Same as transmuting the weights
 
 all.equal(
-  weights_scale(index_weights("HybridLaspeyres")(p1, q0)),
-  weights_scale(weights_transmute(1, -1)(p1 / p0, index_weights("Laspeyres")(p0, q0)))
+  scale_weights(index_weights("HybridLaspeyres")(p1, q0)),
+  scale_weights(transmute_weights(1, -1)(p1 / p0, index_weights("Laspeyres")(p0, q0)))
 )
 
 # Unlike its arithmetic counterpart, the geometric Laspeyres can increase
@@ -206,59 +210,40 @@ all.equal(
 
 p0_small <- replace(p0, 1, p0[1] / 5)
 p0_dx <- replace(p0_small, 1, p0_small[1] + 0.01)
-index_geometric("Laspeyres")(p1, p0_small, q0) < 
-    index_geometric("Laspeyres")(p1, p0_dx, q0)
+geometric_index("Laspeyres")(p1, p0_small, q0) < 
+    geometric_index("Laspeyres")(p1, p0_dx, q0)
 
-#--------------------
+#---- Price updating the weights in a price index ----
 
 # Chain an index by price updating the weights
 
 p2 <- price6[[4]]
-index_laspeyres(p2, p0, q0)
+laspeyres_index(p2, p0, q0)
 
-I1 <- index_laspeyres(p1, p0, q0) 
-w_pu <- weights_update(p1 / p0, index_weights("Laspeyres")(p0, q0))
-I2 <- mean_arithmetic(p2 / p1, w_pu)
+I1 <- laspeyres_index(p1, p0, q0) 
+w_pu <- update_weights(p1 / p0, index_weights("Laspeyres")(p0, q0))
+I2 <- arithmetic_mean(p2 / p1, w_pu)
 I1 * I2
 
 # Works for other types of indexes, too
 
-index_harmonic("Laspeyres")(p2, p0, q0)
+harmonic_index("Laspeyres")(p2, p0, q0)
 
-I1 <- index_harmonic("Laspeyres")(p1, p0, q0) 
-w_pu <- weights_factor(-1)(p1 / p0, index_weights("Laspeyres")(p0, q0))
-I2 <- mean_harmonic(p2 / p1, w_pu)
+I1 <- harmonic_index("Laspeyres")(p1, p0, q0) 
+w_pu <- factor_weights(-1)(p1 / p0, index_weights("Laspeyres")(p0, q0))
+I2 <- harmonic_mean(p2 / p1, w_pu)
 I1 * I2
 
-#--------------------
+#---- Quote contributions ----
 
 # Quote contributions for the Tornqvist index
 
 w <- index_weights("Tornqvist")(p1, p0, q1, q0)
-(con <- contributions_geometric(p1 / p0, w))
+(con <- geometric_contributions(p1 / p0, w))
 
-all.equal(sum(con), index_geometric("Tornqvist")(p1, p0, q1, q0) - 1)
+all.equal(sum(con), geometric_index("Tornqvist")(p1, p0, q1, q0) - 1)
 
-# Quote contributions for the Fisher index
-
-contributions_fisher <- contributions_nested(0, c(1, -1))
-(con <- contributions_fisher(p1 / p0, list(index_weights("Laspeyres")(p0, q0), 
-                                           index_weights("Paasche")(p1, q1))))
-
-all.equal(sum(con), index_fisher(p1, p0, q1, q0) - 1)
-
-# The same as the decomposition in section 4.2.2 of Balk (2008)
-
-Qf <- quantity_index(index_fisher)(q1, q0, p1, p0)
-Ql <- quantity_index(index_laspeyres)(q1, q0, p0)
-wl <- index_weights("Laspeyres")(p0, q0)
-wp <- index_weights("HybridPaasche")(p0, q1)
-
-con2 <- (Qf / (Qf + Ql) * weights_scale(wl) + 
-           Ql / (Qf + Ql) * weights_scale(wp)) * (p1 / p0 - 1)
-all.equal(con, con2)
-
-#--------------------
+#---- Missing values ----
 
 # NAs get special treatment
 
@@ -266,13 +251,13 @@ p_na <- replace(p0, 6, NA)
 
 # Drops the last price relative
 
-index_laspeyres(p1, p_na, q0, na.rm = TRUE)
+laspeyres_index(p1, p_na, q0, na.rm = TRUE)
 
 # Only drops the last period-0 price
 
 sum(p1 * q0, na.rm = TRUE) / sum(p_na * q0, na.rm = TRUE)
 
-#--------------------
+#---- Making the weights for different indexes ----
 
 # Explicit calculation for each of the different weights
 # Carli/Jevons/Coggeshall

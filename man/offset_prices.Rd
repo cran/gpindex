@@ -5,13 +5,13 @@
 \title{Offset prices}
 
 \description{
-Utility functions to offset a vector of prices, computing either the price in the previous period (back price), or the price in the base period. Useful when price information is stored in a table.
+Utility functions to offset a vector of prices, computing either the price in the previous period (back price), or the price in the first period (base price). Useful when price information is stored in a table. (Works well for quantities, too.)
 }
 
 \usage{
-back_price(x, period, product = rep(1, length(x)))
+back_price(x, period, product = gl(1, length(x)))
 
-base_price(x, period, product = rep(1, length(x)))
+base_price(x, period, product = gl(1, length(x)))
 }
 
 \arguments{
@@ -19,7 +19,7 @@ base_price(x, period, product = rep(1, length(x)))
 
 \item{period}{A factor, or something that can be coerced into one, that gives the corresponding time period for each element in \code{x}. The ordering of time periods follows the levels of \code{period} to agree with \code{\link[=cut.Date]{cut()}}.}
 
-\item{product}{A vector that gives the corresponding product identifier for each element in \code{x}. The default is to assume that all prices are for the same product.}
+\item{product}{A factor, or something that can be coerced into one, that gives the corresponding product identifier for each element in \code{x}. The default is to assume that all prices are for the same product.}
 }
 
 \value{
@@ -32,6 +32,10 @@ With \code{base_price()}, the resulting vector gives the value of \code{x} for t
 
 \note{
 By definition, there must be at most one price for each product in each time period to determine a back price. If multiple prices correspond to a period-product pair, then the back price at a point in time is always the first price for that product in the previous period.
+}
+
+\seealso{
+\code{\link{outliers}} for common methods to detect outliers for price relatives.
 }
 
 \examples{
