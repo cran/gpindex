@@ -1,4 +1,4 @@
-\name{outlier methods}
+\name{outliers}
 \alias{outliers}
 \alias{fixed_cutoff}
 \alias{robust_z}
@@ -30,7 +30,7 @@ hb_transform(x)
 }
 
 \arguments{
-\item{x}{A numeric vector of price relatives. These can be made with, e.g., \code{\link[=back_price]{back_price()}}.}
+\item{x}{A strictly positive numeric vector of price relatives. These can be made with, e.g., \code{\link[=back_price]{back_price()}}.}
 \item{cu, cl}{A numeric vector giving the upper and lower cutoffs for each element of \code{x}. The usual recycling rules apply.}
 \item{a}{A numeric vector between 0 and 1 giving the scale factor for the median to establish the minimum dispersion between quartiles for each element of \code{x}. The default does not set a minimum dispersion. The usual recycling rules apply.}
 \item{type}{See \code{\link{quantile}}.}
@@ -60,6 +60,10 @@ ILO, IMF, OECD, Eurostat, UN, and World Bank. (2020). \emph{Consumer Price Index
 Rais, S. (2008). Outlier detection for the Consumer Price Index. \emph{Proceedings of the Survey Methods Section: Statistical Society of Canada Annual Meeting}. 
 }
 
+\seealso{
+\code{\link{grouped}} to make each of these functions operate on grouped data.
+}
+
 \examples{
 set.seed(1234)
 
@@ -68,9 +72,14 @@ x <- rlnorm(10)
 fixed_cutoff(x)
 robust_z(x)
 quartile_method(x)
-resistant_fences(x) # this will always identify fewer outliers than the quartile method
+resistant_fences(x) # always identifies fewer outliers than quartile method
 tukey_algorithm(x)
 
 log(x)
 hb_transform(x)
+
+# Works the same for grouped data
+
+f <- c("a", "b", "a", "a", "b", "b", "b", "a", "a", "b")
+grouped(quartile_method)(x, group = f)
 }

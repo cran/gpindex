@@ -1,21 +1,24 @@
 #---- Price utilities----
 offset_price <- function(type = c("back", "base")) {
-  type <- match.arg(type)
+  offset <- switch(match.arg(type),
+                   back = function(x) x[c(1L, seq_len(length(x) - 1))],
+                   base = function(x) x[1L])
   # return function
   function(x, period, product = gl(1, length(x))) {
-    if (!same_length(x, period, product)) {
-      stop("all arguments must be the same length")
+    if (different_lengths(x, period, product)) {
+      stop(gettext("all arguments must be the same length"))
     }
     if (!length(x)) return(x[0])
-    offset <- function(x) x[c(1L, if (type == "back") seq_len(length(x) - 1))]
     period <- as.factor(period)
     price <- split(x, period)
-    product <- split(as.integer(as.factor(product)), period)
-    if (any(vapply(product, anyDuplicated, numeric(1)) > 0)) {
-      warning("there are duplicated period-product pairs") 
+    product <- as.factor(product)
+    attributes(product) <- NULL # matching is faster on factor codes
+    product <- split(product, period)
+    if (max(vapply(product, anyDuplicated, numeric(1)))) {
+      warning(gettext("there are duplicated period-product pairs"))
     }
-    matches <- Map(match, product, offset(product), incomparables = NA)
-    res <- unsplit(Map(`[`, offset(price), matches), period)
+    m <- .mapply(match, list(product, offset(product)), list(incomparables = NA))
+    res <- unsplit(.mapply(`[`, list(offset(price), m), list()), period)
     attributes(res) <- attributes(x) # unsplit mangles attributes
     res
   }
@@ -75,9 +78,6 @@ tukey_algorithm <- function(x, cu = 2.5, cl = cu, type = 7) {
 
 hb_transform <- function(x) {
   x <- as.numeric(x)
-  if (any(x <= 0, na.rm = TRUE)) {
-    warning("some elements of 'x' are less than or equal to 0; the Hidiroglou-Berthelot transformation is not defined")
-  }
   med <- median(x, na.rm = TRUE)
   res <- 1 - med / x
   gemed <- x >= med

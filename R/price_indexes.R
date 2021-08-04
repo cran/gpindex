@@ -56,6 +56,7 @@ pythagorean_index <- function(class = c("arithmetic", "geometric", "harmonic")) 
                                 "Young"),
                   harmonic = c("Coggeshall", "Laspeyres", "Paasche", "Young"))
   r <- switch(class, arithmetic = 1, geometric = 0, harmonic = -1)
+  gen_mean <- generalized_mean(r)
   # return function
   function(type) {
     type <- match.arg(type, types)
@@ -66,33 +67,33 @@ pythagorean_index <- function(class = c("arithmetic", "geometric", "harmonic")) 
       Dutot = ,
       Jevons = ,
       Coggeshall = function(p1, p0, na.rm = FALSE)
-        generalized_mean(r)(p1 / p0, index_weights(type)(p0), na.rm),
+        gen_mean(p1 / p0, index_weights(type)(p0), na.rm),
       Laspeyres = function(p1, p0, q0, na.rm = FALSE) 
-        generalized_mean(r)(p1 / p0, index_weights(type)(p0, q0), na.rm),
+        gen_mean(p1 / p0, index_weights(type)(p0, q0), na.rm),
       Paasche = ,
       Palgrave = function(p1, p0, q1, na.rm = FALSE)
-        generalized_mean(r)(p1 / p0, index_weights(type)(p1, q1), na.rm),
+        gen_mean(p1 / p0, index_weights(type)(p1, q1), na.rm),
       Drobish = ,
       Unnamed = ,
       Vartia2 = ,
       SatoVartia = ,
       Walsh2 = ,
       Tornqvist = function(p1, p0, q1, q0, na.rm = FALSE)
-        generalized_mean(r)(p1 / p0, index_weights(type)(p1, p0, q1, q0), na.rm),
+        gen_mean(p1 / p0, index_weights(type)(p1, p0, q1, q0), na.rm),
       Vartia1 = ,
       MontgomeryVartia = function(p1, p0, q1, q0, na.rm = FALSE)
         exp(sum(log(p1 / p0) * index_weights(type)(p1, p0, q1, q0), na.rm = na.rm)),
       Walsh1 = ,
       MarshallEdgeworth = ,
       GearyKhamis = function(p1, p0, q1, q0, na.rm = FALSE)
-        generalized_mean(r)(p1 / p0, index_weights(type)(p0, q1, q0), na.rm),
+        gen_mean(p1 / p0, index_weights(type)(p0, q1, q0), na.rm),
       Lowe = function(p1, p0, qb, na.rm = FALSE)
-        generalized_mean(r)(p1 / p0, index_weights(type)(p0, qb), na.rm),
+        gen_mean(p1 / p0, index_weights(type)(p0, qb), na.rm),
       Young = function(p1, p0, pb, qb, na.rm = FALSE)
-        generalized_mean(r)(p1 / p0, index_weights(type)(pb, qb), na.rm)
+        gen_mean(p1 / p0, index_weights(type)(pb, qb), na.rm)
     )
     # clean up enclosing environment
-    enc <- list(r = r, type = type)
+    enc <- list(gen_mean = gen_mean, type = type)
     environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
     res
   }
@@ -155,8 +156,11 @@ bw_index <- function(p1, p0, na.rm = FALSE) {
 
 #---- Generalized Stuval index ----
 stuval_index <- function(a, b) {
-  if (!is_number(a) || !is_number(b)) {
-    stop("'a' and 'b' must be finite length 1 numerics")
+  if (not_number(a)) {
+    stop(gettext("'a' must be a finite length 1 numeric"))
+  }
+  if (not_number(b)) {
+    stop(gettext("'b' must be a finite length 1 numeric"))
   }
   function(p1, p0, q1, q0, na.rm = FALSE) {
     pl <- laspeyres_index(p1, p0, q0, na.rm)

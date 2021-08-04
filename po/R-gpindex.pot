@@ -1,0 +1,53 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: gpindex 0.3.4\n"
+"POT-Creation-Date: 2021-08-03 23:47\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+
+msgid "'r' must be a finite length 1 numeric"
+msgstr ""
+
+msgid "'r' is very small in absolute value, but not zero; this can give misleading results"
+msgstr ""
+
+msgid "'x' and 'w' must be the same length"
+msgstr ""
+
+msgid "'s' must be a finite length 1 numeric"
+msgstr ""
+
+msgid "'s' is very small in absolute value, but not zero; this can give misleading results"
+msgstr ""
+
+msgid "'r' and 's' are very close in value, but not equal; this can give misleading results"
+msgstr ""
+
+msgid "'s' must be a pair of numeric values"
+msgstr ""
+
+msgid "'t' must be a pair of numeric values"
+msgstr ""
+
+msgid "no price/quantity arguments"
+msgstr ""
+
+msgid "'f' already has an argument called 'group'"
+msgstr ""
+
+msgid "'a' must be a finite length 1 numeric"
+msgstr ""
+
+msgid "'b' must be a finite length 1 numeric"
+msgstr ""
+
+msgid "all arguments must be the same length"
+msgstr ""
+
+msgid "there are duplicated period-product pairs"
+msgstr ""

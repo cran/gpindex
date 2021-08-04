@@ -3,26 +3,65 @@ transmute_weights <- function(r, s) {
   gen_mean <- generalized_mean(r)
   ext_mean <- extended_mean(r, s)
   # return function
-  function(x, w = rep(1, length(x))) {
-    res <- w * ext_mean(x, gen_mean(x, w, na.rm = TRUE)) %^% (r - s)
-    # make sure NAs propagate so that weights scale correctly with NAs in x
-    res[if (r == s) is.na(x) & !is.na(w)] <- NA
-    res
+  res <- function(x, w) {
+    if (missing(w)) {
+      # [[2]][[3]]
+    } else {
+      # [[2]][[4]]
+    }
   }
+  expr <- quote(ext_mean(x, gen_mean(x, w, na.rm = TRUE)))
+  # unweighted calculation
+  body(res)[[2]][[3]] <- if (r == s) {
+    # make sure NAs carry on
+    quote(replace(rep(1, length(x)), is.na(x), NA))
+  } else {
+    eval(bquote(pow(.(expr), r - s)))
+  }
+  # weighted calculation
+  body(res)[[2]][[4]] <- if (r == s) {
+    # make sure NAs carry on
+    quote({w[is.na(x)] <- NA; w})
+  } else {
+    eval(bquote(wpow(.(expr), w, r - s)))
+  }
+  # clean up enclosing environment
+  enc <- list(r = r, s = s, gen_mean = gen_mean, ext_mean = ext_mean)
+  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  res
 }
 
 #---- Factor weights  ----
 factor_weights <- function(r) {
-  if (!is_number(r)) {
-    stop("'r' must be a finite length 1 numeric")
+  if (not_number(r)) {
+    stop(gettext("'r' must be a finite length 1 numeric"))
   }
   # return function
-  function(x, w = rep(1, length(x))) {
-    res <- w * x %^% r
-    # make sure NAs propagate so that chaining works correctly with NAs in x
-    res[if (r == 0) is.na(x) & !is.na(w)] <- NA
-    res
+  res <- function(x, w) {
+    if (missing(w)) {
+      # [[2]][[3]]
+    } else {
+      # [[2]][[4]]
+    }
   }
+  # unweighted calculation
+  body(res)[[2]][[3]] <- if (r == 0) {
+    # make sure NAs carry on
+    quote(replace(rep(1, length(x)), is.na(x), NA))
+  } else {
+    pow(x, r)
+  }
+  # weighted calculation
+  body(res)[[2]][[4]] <- if (r == 0) {
+    # make sure NAs carry on
+    quote({w[is.na(x)] <- NA; w})
+  } else {
+    wpow(x, w, r)
+  }
+  # clean up enclosing environment
+  enc <- list(r = r)
+  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  res
 }
 
 update_weights <- factor_weights(1)
@@ -35,7 +74,7 @@ scale_weights <- function(x) {
 #---- Contributions ----
 contributions <- function(r) {
   arithmetic_weights <- transmute_weights(r, 1)
-  function(x, w = rep(1, length(x))) {
+  function(x, w) {
     scale_weights(arithmetic_weights(x, w)) * (x - 1)
   }
 }
@@ -50,16 +89,16 @@ harmonic_contributions <- contributions(-1)
 nested_contributions <- function(r, s, t = c(1, 1)) {
   contrib <- contributions(r)
   if (length(s) != 2) {
-    stop("'s' must be a pair of numeric values")
+    stop(gettext("'s' must be a pair of numeric values"))
   }
   r_weights1 <- transmute_weights(s[1], r)
   r_weights2 <- transmute_weights(s[2], r)
   if (length(t) != 2 || !is.numeric(t)) {
-    stop("'t' must be a pair of numeric values")
+    stop(gettext("'t' must be a pair of numeric values"))
   }
   t <- as.numeric(t) # strip attributes
   # return function
-  function(x, w1 = rep(1, length(x)), w2 = rep(1, length(x))) {
+  function(x, w1, w2) {
     v1 <- scale_weights(r_weights1(x, w1))
     v2 <- scale_weights(r_weights2(x, w2))
     # the calculation is wrong if NAs in w1 or w2 propagate
@@ -72,18 +111,18 @@ nested_contributions <- function(r, s, t = c(1, 1)) {
 nested_contributions2 <- function(r, s, t = c(1, 1)) {
   arithmetic_weights <- transmute_weights(r, 1)
   if (length(s) != 2) {
-    stop("'s' must be a pair of numeric values")
+    stop(gettext("'s' must be a pair of numeric values"))
   }
   contrib1 <- contributions(s[1])
   contrib2 <- contributions(s[2])
   mean1 <- generalized_mean(s[1])
   mean2 <- generalized_mean(s[2])
   if (length(t) != 2 || !is.numeric(t)) {
-    stop("'t' must be a pair of numeric values")
+    stop(gettext("'t' must be a pair of numeric values"))
   }
   t <- as.numeric(t) # strip attributes
   # return function
-  function(x, w1 = rep(1, length(x)), w2 = rep(1, length(x))) {
+  function(x, w1, w2) {
     m <- c(mean1(x, w1, na.rm = TRUE), mean2(x, w2, na.rm = TRUE))
     v <- scale_weights(arithmetic_weights(m, t))
     u1 <- contrib1(x, w1)

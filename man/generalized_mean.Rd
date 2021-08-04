@@ -1,4 +1,4 @@
-\name{generalized mean}
+\name{generalized_mean}
 \alias{generalized_mean}
 \alias{arithmetic_mean}
 \alias{geometric_mean}
@@ -13,11 +13,11 @@ Calculate a generalized mean.
 \usage{
 generalized_mean(r)
 
-arithmetic_mean(x, w = rep(1, length(x)), na.rm = FALSE)
+arithmetic_mean(x, w, na.rm = FALSE)
 
-geometric_mean(x, w = rep(1, length(x)), na.rm = FALSE)
+geometric_mean(x, w, na.rm = FALSE)
 
-harmonic_mean(x, w = rep(1, length(x)), na.rm = FALSE)
+harmonic_mean(x, w, na.rm = FALSE)
 }
 
 \arguments{
@@ -50,7 +50,7 @@ The underlying calculation returned by \code{generalized_mean()} is mostly ident
 \value{
 \code{generalized_mean()} returns a function:
 
-\code{function(x, w = rep(1, length(x)), na.rm = FALSE)}.
+\preformatted{function(x, w, na.rm = FALSE){...}}
 
 This computes the generalized mean of order \code{r} of \code{x} with weights \code{w}.
 
@@ -111,8 +111,8 @@ arithmetic_mean(x, w) # same as weighted.mean(x, w)
 
 geometric_mean(x, w) # same as prod(x^w)
 
-# Using prod() to manually calculate the geometric mean can give misleading
-# results
+# Using prod() to manually calculate the geometric mean 
+# can give misleading results
 
 z <- 1:1000
 prod(z)^(1 / length(z)) # overflow
@@ -131,15 +131,15 @@ harmonic_mean(x, w) # same as 1 / weighted.mean(1 / x, w)
 generalized_mean(2)(x, w)
 
 # Cubic mean
-# Notice that this is larger than the other means so far because the 
-# generalized mean is increasing in r
+# Notice that this is larger than the other means so far because 
+# the generalized mean is increasing in r
 
 generalized_mean(3)(x, w)
 
 #---- Comparing the Pythagorean means ----
 
-# The dispersion between the arithmetic, geometric, and harmonic mean usually
-# increases as the variance of 'x' increases
+# The dispersion between the arithmetic, geometric, and harmonic
+# mean usually increases as the variance of 'x' increases
 
 x <- c(1, 3, 5)
 y <- c(2, 3, 4)
@@ -155,11 +155,12 @@ geometric_mean(y) - harmonic_mean(y)
 # But the dispersion between these means is only bounded by
 # the variance (Bullen, 2003, p. 156)
 
-arithmetic_mean(x) - geometric_mean(x) >=  2 / 3 * var(x) / (2 * max(x))
-arithmetic_mean(x) - geometric_mean(x) <=  2 / 3 * var(x) / (2 * min(x))
+arithmetic_mean(x) - geometric_mean(x) >= 2 / 3 * var(x) / (2 * max(x))
+arithmetic_mean(x) - geometric_mean(x) <= 2 / 3 * var(x) / (2 * min(x))
 
-# Example from Lord (2002) where the dispersion decreases as the variance increases,
-# counter to the claims in Fisher (1922, p. 108) and the CPI manual (par. 1.14)
+# Example by Lord (2002) where the dispersion decreases as 
+# the variance increases, counter to the claims by 
+# Fisher (1922, p. 108) and the CPI manual (par. 1.14)
 
 x <- (5 + c(sqrt(5), -sqrt(5), -3)) / 4
 y <- (16 + c(7 * sqrt(2), -7 * sqrt(2), 0)) / 16
@@ -172,8 +173,9 @@ arithmetic_mean(y) - geometric_mean(y)
 geometric_mean(x) - harmonic_mean(x)
 geometric_mean(y) - harmonic_mean(y)
 
-# The "bias" in the arithmetic and harmonic indexes is also smaller in this case, 
-# counter to the claim in Fisher (1922, p. 108)
+# The "bias" in the arithmetic and harmonic indexes is also 
+# smaller in this case, counter to the claim 
+# by Fisher (1922, p. 108)
 
 arithmetic_mean(x) * arithmetic_mean(1 / x) - 1
 arithmetic_mean(y) * arithmetic_mean(1 / y) - 1
@@ -187,17 +189,6 @@ w[2] <- NA
 
 arithmetic_mean(x, w)
 
-arithmetic_mean(x, w, na.rm = TRUE) # drops the second observation
+arithmetic_mean(x, w, na.rm = TRUE) # drop the second observation
 weighted.mean(x, w, na.rm = TRUE) # still returns NA
-
-#---- Negative values ----
-
-# Sometimes it makes sense to calculate a generalized mean with
-# negative inputs, so the warning can be ignored
-
-arithmetic_mean(c(1, 2, -3))
-
-# Other times it's less obvious
-
-harmonic_mean(c(1, 2, -3))
 }

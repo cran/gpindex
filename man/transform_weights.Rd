@@ -1,4 +1,4 @@
-\name{transform weights}
+\name{transform_weights}
 \alias{transmute_weights}
 \alias{factor_weights}
 \alias{update_weights}
@@ -20,7 +20,7 @@ transmute_weights(r, s)
 
 factor_weights(r)
 
-update_weights(x, w = rep(1, length(x)))
+update_weights(x, w)
 
 scale_weights(x)
 }
@@ -57,7 +57,7 @@ Both \code{x} and \code{w} should be strictly positive. This is not enforced, bu
 \value{
 \code{transmute_weights()} and \code{factor_weights()} return a function: 
 
-\code{function(x, w = rep(1, length(x))}.
+\preformatted{function(x, w){...}}
 
 In each case this function augments the weights \code{w}.
 
@@ -84,6 +84,8 @@ Sydsaeter, K., Strom, A., and Berck, P. (2005). \emph{Economists' Mathematical M
 \code{\link{extended_mean}} for the extended mean that underlies \code{transmute_weights()}.
 
 \code{\link{contributions}} for calculating additive quote contributions.
+
+\code{\link{grouped}} to make each of these functions operate on grouped data.
 }
 
 \examples{
@@ -93,8 +95,8 @@ w <- runif(2)
 
 #---- Transforming generalized means ----
 
-# Calculate the geometric mean as an arithmetic mean and harmonic mean by 
-# transmuting the weights
+# Calculate the geometric mean as an arithmetic mean and 
+# harmonic mean by transmuting the weights
 
 geometric_mean(x)
 arithmetic_mean(x, transmute_weights(0, 1)(x))
@@ -113,17 +115,17 @@ arithmetic_mean(x, transmute_weights(0, 1)(x, 0.5 * v1 + 0.5 * v2))
 
 #---- Quote contributions ----
 
-# Transmuted weights can be used to calculate quote contributions for, 
-# e.g., a geometric price index
+# Transmuted weights can be used to calculate quote contributions 
+# for, e.g., a geometric price index
 
 scale_weights(transmute_weights(0, 1)(x)) * (x - 1)
 geometric_contributions(x) # the more convenient way
 
 #---- Basket representation of a price index ----
 
-# Any generalized-mean index can be represented as a basket-style index
-# by transmuting the weights, which is how some authors define a
-# price index (e.g., Sydsaeter et al., 2005, p. 174)
+# Any generalized-mean index can be represented as a basket-style 
+# index by transmuting the weights, which is how some authors 
+# define a price index (e.g., Sydsaeter et al., 2005, p. 174)
 
 p1 <- 2:6
 p0 <- 1:5
@@ -143,8 +145,8 @@ harmonic_mean(x, w) * harmonic_mean(y, factor_weights(-1)(x, w))
 arithmetic_mean(x * y, w)
 arithmetic_mean(x, w) * arithmetic_mean(y, update_weights(x, w))
 
-# In cases where x and y have the same order, Chebyshev's inequality implies
-# that the chained calculation is too small
+# In cases where x and y have the same order, Chebyshev's 
+# inequality implies that the chained calculation is too small
 
 arithmetic_mean(x * y, w) > arithmetic_mean(x, w) * arithmetic_mean(y, w)
 }
