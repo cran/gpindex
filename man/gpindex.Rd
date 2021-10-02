@@ -6,7 +6,7 @@
 \title{Generalized Price and Quantity Indexes}
 
 \description{
-A small package for calculating lots of different price indexes, and by extension quantity indexes. Provides tools to build and work with any type of bilateral generalized-mean index (of which most price indexes are), along with a few important indexes that don't belong to the generalized-mean family. Implements and extends many of the methods in Balk (2008, ISBN:978-1-107-40496-0) and ILO, IMF, OECD, Eurostat, UN, and World Bank (2020, ISBN:978-1-51354-298-0) for bilateral price indexes.
+A small package for calculating lots of different price indexes, and by extension quantity indexes. Provides tools to build and work with any type of bilateral generalized-mean index (of which most price indexes are), along with a few important indexes that don't belong to the generalized-mean family (e.g., superlative quadratic-mean indexes, GEKS). Implements and extends many of the methods in Balk (2008, ISBN:978-1-107-40496-0) and the CPI manual (2020, ISBN:978-1-51354-298-0) for bilateral price indexes.
 }
 
 \section{Background}{
@@ -29,8 +29,8 @@ On top of these basic mathematical tools are functions for making standard price
 There are several utility functions for making price relatives (e.g., \code{\link[=back_price]{back_price()}}) when data are stored in a table, and identifying extreme price relatives (e.g., \code{\link[=resistant_fences]{resistant_fences()}}) that may not be suitable for a price index. All functions can be made to work with grouped data with the \code{\link[=grouped]{grouped()}} operator.
 }
 
-\note{
-There are a number of R packages on the CRAN for working with price/quantity indexes that implement the standard index-number formulas (e.g., \pkg{IndexNumber}, \pkg{productivity}, \pkg{IndexNumR}, \pkg{micEconIndex}). While there is support for a large number of index-number formulas out-of-the box in this package, the focus is on the tools to easily make and work with any type of generalized-mean price index. Consequently, compared to existing packages, this package is suitable for building custom price/quantity indexes, and learning about or researching different types of index-number formulas.
+\section{Contribution}{
+There are a number of R packages on the CRAN that implement the standard index-number formulas (e.g., \pkg{IndexNumber}, \pkg{productivity}, \pkg{IndexNumR}, \pkg{micEconIndex}, \pkg{PriceIndices}). While there is support for a large number of index-number formulas out-of-the box in this package, the focus is on the tools to easily make and work with any type of generalized-mean price index. Consequently, compared to existing packages, this package is suitable for building custom price/quantity indexes, calculating indexes with sample data, decomposing indexes, and learning about or researching different types of index-number formulas.
 }
 
 \references{

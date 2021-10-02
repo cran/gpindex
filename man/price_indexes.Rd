@@ -16,7 +16,7 @@
 \alias{cswd_index}
 \alias{cswdb_index}
 \alias{bw_index}
-\alias{stuval_index}
+\alias{stuvel_index}
 \alias{index_weights}
 
 \title{Price indexes}
@@ -58,7 +58,7 @@ cswdb_index(p1, p0, q1, q0, na.rm = FALSE)
 
 bw_index(p1, p0, na.rm = FALSE)
 
-stuval_index(a, b)
+stuvel_index(a, b)
 
 index_weights(type)
 }
@@ -82,7 +82,7 @@ index_weights(type)
 
 \item{elasticity}{The elasticity of substitution for the Lloyd-Moulton and AG mean indexes.}
 
-\item{a, b}{Parameters for the generalized Stuval index.}
+\item{a, b}{Parameters for the generalized Stuvel index.}
 }
 
 \details{
@@ -94,7 +94,7 @@ The \code{arithmetic_index()}, \code{geometric_index()}, and \code{harmonic_inde
 \item Laspeyres
 \item Palgrave
 \item Unnamed index (arithmetic analog of the Fisher)
-\item Drobish
+\item Drobisch
 \item Walsh-I (arithmetic Walsh)
 \item Marshall-Edgeworth
 \item Geary-Khamis
@@ -120,7 +120,7 @@ Along with the \code{lm_index()} function to calculate the Lloyd-Moulton index, 
 
 The Laspeyres, Paasche, Jevons, Lowe, and Young indexes are among the most common price indexes, and so they get their own functions. The \code{laspeyres_index()}, \code{lowe_index()}, and \code{young_index()} functions correspond to setting the appropriate \code{type} in \code{arithmetic_index()}; \code{paasche_index()} and \code{jevons_index()} instead come from the \code{harmonic_index()} and \code{geometric_index()} functions.
 
-In addition to these generalized-mean indexes, there are also functions for calculating a variety of non-generalized-mean indexes. The Fisher index is the geometric mean of the arithmetic Laspeyres and Paasche indexes; the Harmonic Laspeyres Paasche index is the harmonic analog of the Fisher index. The Carruthers-Sellwood-Ward-Dalen and Carruthers-Sellwood-Ward-Dalen-Balk indexes are sample analogs of the Fisher index; the Balk-Walsh index is the sample analog of the Walsh index. The AG mean index is the arithmetic or geometric mean of the geometric and arithmetic Laspeyres indexes, weighted by the elasticity of substitution. The \code{stuval_index()} function returns a function to calculate a Stuval index of the given parameters.
+In addition to these generalized-mean indexes, there are also functions for calculating a variety of non-generalized-mean indexes. The Fisher index is the geometric mean of the arithmetic Laspeyres and Paasche indexes; the Harmonic Laspeyres Paasche index is the harmonic analog of the Fisher index. The Carruthers-Sellwood-Ward-Dalen and Carruthers-Sellwood-Ward-Dalen-Balk indexes are sample analogs of the Fisher index; the Balk-Walsh index is the sample analog of the Walsh index. The AG mean index is the arithmetic or geometric mean of the geometric and arithmetic Laspeyres indexes, weighted by the elasticity of substitution. The \code{stuvel_index()} function returns a function to calculate a Stuvel index of the given parameters.
 
 The \code{index_weights()} function returns a function to calculate weights for a variety of price indexes. Weights for the following types of indexes can be calculated.
 \itemize{
@@ -131,7 +131,7 @@ The \code{index_weights()} function returns a function to calculate weights for 
 \item Paasche / Palgrave
 \item Hybrid Paasche (for use in an arithmetic mean)
 \item Tornqvist / Unnamed
-\item Drobish
+\item Drobisch
 \item Walsh-I (for an arithmetic Walsh index)
 \item Walsh-II (for a geometric Walsh index)
 \item Marshall-Edgeworth
@@ -144,17 +144,17 @@ The \code{index_weights()} function returns a function to calculate weights for 
 
 The weights need not sum to 1, as this normalization isn't always appropriate (i.e., for the Vartia-I weights).
 
-Naming for the indexes and weights generally follows the CPI manual and Balk (2008). In several cases two or more names correspond to the same weights (e.g., Paasche and Palgrave, or Sato-Vartia and Vartia-II). The calculations are given in the examples.
+Naming for the indexes and weights generally follows the CPI manual (2020) and Balk (2008). In several cases two or more names correspond to the same weights (e.g., Paasche and Palgrave, or Sato-Vartia and Vartia-II). The calculations are given in the examples.
 }
 
 \value{
-\code{arithmetic_index()}, \code{geometric_index()}, \code{harmonic_index()}, \code{stuval_index()}, and \code{index_weights()} each return a function to compute the relevant price indexes; the others return a numeric value giving the change in price between the base period and current period.
+\code{arithmetic_index()}, \code{geometric_index()}, \code{harmonic_index()}, \code{stuvel_index()}, and \code{index_weights()} each return a function to compute the relevant price indexes; the others return a numeric value giving the change in price between the base period and current period.
 }
 
 \note{
-Dealing with missing values is cumbersome when making a price index, and best avoided. As there are different approaches for dealing with missing values in a price index, missing values should be dealt with prior to calculating the index. 
+There are different ways to deal with missing values in a price index, and care should be taken when relying on these functions to remove missing values. Setting \code{na.rm = TRUE} removes price relatives with missing information, either because of a missing price or a missing weight, while using all available non-missing information to make the weights. 
 
-The approach taken when \code{na.rm = TRUE} removes price relatives with missing information, either because of a missing price or a missing weight. Certain properties of an index-number formula may not work as expected with missing values, however, if there is ambiguity about how to remove missing values from the weights (as in, e.g., a Tornqvist or Sato-Vartia index).
+Certain properties of an index-number formula may not work as expected when removing missing values if there is ambiguity about how to remove missing values from the weights (as in, e.g., a Tornqvist or Sato-Vartia index). The \code{\link[=balanced]{balanced()}} operator may be helpful, as it balances the removal of missing values across prices and quantities prior to making the weights.
 }
 
 \references{
@@ -171,6 +171,8 @@ ILO, IMF, OECD, Eurostat, UN, and World Bank. (2020). \emph{Consumer Price Index
 \code{\link{update_weights}} for price-updating weights.
 
 \code{\link{quantity_index}} to remap the arguments in these functions for a quantity index.
+
+\code{\link{geks}} for making a GEKS index based on, e.g., the Fisher index.
 }
 
 \examples{
@@ -290,9 +292,9 @@ all.equal(index_weights("HybridPaasche")(p0, q1), p0 * q1)
 all.equal(index_weights("Tornqvist")(p1, p0, q1, q0),
           0.5 * p0 * q0 / sum(p0 * q0) + 0.5 * p1 * q1 / sum(p1 * q1))
 
-# Drobish
+# Drobisch
 
-all.equal(index_weights("Drobish")(p1, p0, q1, q0),
+all.equal(index_weights("Drobisch")(p1, p0, q1, q0),
           0.5 * p0 * q0 / sum(p0 * q0) + 0.5 * p0 * q1 / sum(p0 * q1))
 
 # Walsh-I
