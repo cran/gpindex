@@ -5,28 +5,27 @@ transmute_weights <- function(r, s) {
   # return function
   res <- function(x, w) {
     if (missing(w)) {
-      # [[2]][[3]]
+      # [[2]][[3]] unweighted calculation
     } else {
-      # [[2]][[4]]
+      # [[2]][[4]] weighted calculation
     }
   }
-  expr <- quote(ext_mean(x, gen_mean(x, w, na.rm = TRUE)))
   # unweighted calculation
   body(res)[[2]][[3]] <- if (r == s) {
     # make sure NAs carry on
-    quote(replace(rep(1, length(x)), is.na(x), NA))
+    quote(replace(rep(1, length(x)), is.na(x), NA_real_))
   } else {
-    eval(bquote(pow(.(expr), r - s)))
+    pow(ext_mean(x, gen_mean(x, na.rm = TRUE)), r - s)
   }
   # weighted calculation
   body(res)[[2]][[4]] <- if (r == s) {
     # make sure NAs carry on
     quote({w[is.na(x)] <- NA; w})
   } else {
-    eval(bquote(wpow(.(expr), w, r - s)))
+    wpow(ext_mean(x, gen_mean(x, w, na.rm = TRUE)), w, r - s)
   }
   # clean up enclosing environment
-  enc <- list(r = r, s = s, gen_mean = gen_mean, ext_mean = ext_mean)
+  enc <- list(gen_mean = gen_mean, ext_mean = ext_mean)
   environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
   res
 }
@@ -39,15 +38,15 @@ factor_weights <- function(r) {
   # return function
   res <- function(x, w) {
     if (missing(w)) {
-      # [[2]][[3]]
+      # [[2]][[3]] unweighted calculation
     } else {
-      # [[2]][[4]]
+      # [[2]][[4]] weighted calculation
     }
   }
   # unweighted calculation
   body(res)[[2]][[3]] <- if (r == 0) {
     # make sure NAs carry on
-    quote(replace(rep(1, length(x)), is.na(x), NA))
+    quote(replace(rep(1, length(x)), is.na(x), NA_real_))
   } else {
     pow(x, r)
   }
@@ -59,8 +58,7 @@ factor_weights <- function(r) {
     wpow(x, w, r)
   }
   # clean up enclosing environment
-  enc <- list(r = r)
-  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  environment(res) <- getNamespace("gpindex")
   res
 }
 
@@ -74,9 +72,14 @@ scale_weights <- function(x) {
 #---- Contributions ----
 contributions <- function(r) {
   arithmetic_weights <- transmute_weights(r, 1)
-  function(x, w) {
+  # return function
+  res <- function(x, w) {
     scale_weights(arithmetic_weights(x, w)) * (x - 1)
   }
+  # clean up enclosing environment
+  enc <- list(arithmetic_weights = arithmetic_weights)
+  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  res
 }
 
 arithmetic_contributions <- contributions(1)
@@ -98,14 +101,23 @@ nested_contributions <- function(r, s, t = c(1, 1)) {
   }
   t <- as.numeric(t) # strip attributes
   # return function
-  function(x, w1, w2) {
+  res <- function(x, w1, w2) {
     v1 <- scale_weights(r_weights1(x, w1))
     v2 <- scale_weights(r_weights2(x, w2))
     # the calculation is wrong if NAs in w1 or w2 propagate
-    v1[is.na(v1) & !is.na(v2)] <- 0
-    v2[is.na(v2) & !is.na(v1)] <- 0
+    if (!missing(w1) && anyNA(w1)) v1[is.na(v1) & !is.na(v2)] <- 0
+    if (!missing(w2) && anyNA(w2)) v2[is.na(v2) & !is.na(v1)] <- 0
+    # same for t
+    t[is.na(t) & !rev(is.na(t))] <- 0
     contrib(x, t[1] * v1 + t[2] * v2)
   }
+  # clean up enclosing environment
+  enc <- list(contrib = contrib,
+              r_weights1 = r_weights1,
+              r_weights2 = r_weights2,
+              t = t)
+  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  res
 }
 
 nested_contributions2 <- function(r, s, t = c(1, 1)) {
@@ -122,16 +134,27 @@ nested_contributions2 <- function(r, s, t = c(1, 1)) {
   }
   t <- as.numeric(t) # strip attributes
   # return function
-  function(x, w1, w2) {
+  res <- function(x, w1, w2) {
     m <- c(mean1(x, w1, na.rm = TRUE), mean2(x, w2, na.rm = TRUE))
     v <- scale_weights(arithmetic_weights(m, t))
     u1 <- contrib1(x, w1)
     u2 <- contrib2(x, w2)
     # the calculation is wrong if NAs in w1 or w2 propagate
-    u1[is.na(u1) & !is.na(u2)] <- 0
-    u2[is.na(u2) & !is.na(u1)] <- 0
+    if (!missing(w1) && anyNA(w1)) u1[is.na(u1) & !is.na(u2)] <- 0
+    if (!missing(w2) && anyNA(w2)) u2[is.na(u2) & !is.na(u1)] <- 0
+    # same for v
+    v[is.na(v) & !rev(is.na(v))] <- 0
     v[1] * u1  + v[2] * u2 
   }
+  # clean up enclosing environment
+  enc <- list(arithmetic_weights = arithmetic_weights,
+              contrib1 = contrib1,
+              contrib2 = contrib2,
+              mean1 = mean1,
+              mean2 = mean2,
+              t = t)
+  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  res
 }
 
 fisher_contributions <- nested_contributions(0, c(1, -1))

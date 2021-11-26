@@ -17,12 +17,14 @@ Calculate additive quote contributions for generalized-mean price indexes, and i
 }
 
 \usage{
+## Function factories
 contributions(r)
 
 nested_contributions(r, s, t = c(1, 1))
 
 nested_contributions2(r, s, t = c(1, 1))
 
+## Special cases
 arithmetic_contributions(x, w)
 
 geometric_contributions(x, w)
@@ -81,9 +83,11 @@ This computes the additive contribution for each element of \code{x} when a gene
 \references{
 Balk, B. M. (2008). \emph{Price and Quantity Index Numbers}. Cambridge University Press.
 
-Martin, S. (2021). A note on general decompositions for price indexes. \emph{Prices Analytical Series}, Statistics Canada catalogue no. 62F0014M.
+Martin, S. (2021). A note on general decompositions for price indexes. \emph{Prices Analytical Series}, Statistics Canada catalogue no. 62F0014M. Statistics Canada, Ottawa.
 
 Reinsdorf, M. B., Diewert, W. E., and Ehemann, C. (2002). Additive decompositions for Fisher, Tornqvist and geometric mean indexes. \emph{Journal of Economic and Social Measurement}, 28(1-2):51--61.
+
+Webster, M., and Tarnow-Mordi, R. C. (2019). Decomposing multilateral price indexes into the contributions of individual commodities. \emph{Journal of Official Statistics}, 35(2):461--486.
 }
 
 \seealso{

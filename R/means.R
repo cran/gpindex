@@ -19,7 +19,7 @@ generalized_mean <- function(r) {
           x <- x[!is.na(x)]
         }
       }
-      # [[2]][[3]][[3]] 
+      # [[2]][[3]][[3]] unweighted calculation
     # weights
     } else {
       if (length(x) != length(w)) {
@@ -32,24 +32,25 @@ generalized_mean <- function(r) {
           w <- w[keep]
         }
       }
-      # [[2]][[4]][[4]]
+      # [[2]][[4]][[4]] weighted calculation
     }
   }
   # unweighted calculation
   body(res)[[2]][[3]][[3]] <- if (r == 0) {
     quote(exp(sum(log(x)) / length(x)))
   } else {
-    eval(bquote(pow(sum(.(pow(x, r))) / length(x), 1 / r)))
+    z <- bquote(pow(sum(.(pow(x, r))) / length(x), 1 / r))
+    eval(z)
   }
   # weighted calculation
   body(res)[[2]][[4]][[4]] <- if (r == 0) {
     quote(exp(sum(w * log(x)) / sum(w)))
   } else {
-    eval(bquote(pow(sum(.(wpow(x, w, r))) / sum(w), 1 / r)))
+    z <- bquote(pow(sum(.(wpow(x, w, r))) / sum(w), 1 / r))
+    eval(z)
   }
   # clean up enclosing environment
-  enc <- list(r = r)
-  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  environment(res) <- getNamespace("gpindex")
   res
 }
 
@@ -80,10 +81,10 @@ extended_mean <- function(r, s) {
   }
   # return function
   res <- function(a, b, tol = .Machine$double.eps^0.5) {
-    res # placeholder
+    res # placeholder for the calculation
     # set output to a when a == b
-    loc <- which(abs(a - b) <= tol)
-    res[loc] <- a[wrap_around(a, loc)]
+    i <- which(abs(a - b) <= tol)
+    res[i] <- a[(i - 1) %% length(a) + 1]
     res
   }
   expr <- if (r == 0 && s == 0) {
@@ -91,38 +92,24 @@ extended_mean <- function(r, s) {
   } else if (r == 0) {
     # ((a^s - b^s) / log(a / b) / s)^(1 / s)
     z <- bquote((.(pow(a, s)) - .(pow(b, s))) / log(a / b))
-    if (s != 1) {
-      eval(bquote(pow(.(z) / s, 1 / s)))
-    } else {
-      z
-    }
+    # this saves dividing by 1, a common case
+    if (s != 1) eval(bquote(pow(.(z) / .(s), 1 / s))) else z
   } else if (s == 0) {
     # ((a^r - b^r) / log(a / b) / r)^(1 / r)
     z <- bquote((.(pow(a, r)) - .(pow(b, r))) / log(a / b))
-    if (r != 1) {
-      eval(bquote(pow(.(z) / r, 1 / r)))
-    } else {
-      z
-    }
+    if (r != 1) eval(bquote(pow(.(z) / .(r), 1 / r))) else z
   } else if (r == s) {
     # exp((a^r * log(a) - b^r * log(b)) / (a^r - b^r) - 1 / r)
     bquote(exp((.(pow(a, r)) * log(a) - .(pow(b, r)) * log(b)) / 
-                 (.(pow(a, r)) - .(pow(b, r))) - 1 / r))
+                 (.(pow(a, r)) - .(pow(b, r))) - .(1 / r)))
   } else {
     # ((a^s - b^s) / (a^r - b^r) * r / s)^(1 / (s - r))
     z <- bquote((.(pow(a, s)) - .(pow(b, s))) / (.(pow(a, r)) - .(pow(b, r))))
-    if (r == 1) {
-      eval(bquote(pow(.(z) / s, 1 / (s - 1))))
-    } else if (s == 1) {
-      eval(bquote(pow(.(z) * r, 1 / (1 - r))))
-    } else {
-      eval(bquote(pow(.(z) * (r / s), 1 / (s - r))))
-    }
+    eval(bquote(pow(.(z) * .(r / s), 1 / (s - r))))
   }
   body(res)[[2]] <- call("<-", quote(res), expr)
   # clean up enclosing environment
-  enc <- list(r = r, s = s)
-  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  environment(res) <- getNamespace("gpindex")
   res
 }
 
@@ -140,9 +127,9 @@ lehmer_mean <- function(r) {
   # return function
   res <- function(x, w, na.rm = FALSE) {
     if (missing(w)) {
-      # [[2]][[3]]
+      # [[2]][[3]] unweighted calculation
     } else {
-      # [[2]][[4]]
+      # [[2]][[4]] weighted calculation
     }
   }
   body(res)[[2]][[3]] <- if (r != 1) {
@@ -152,8 +139,7 @@ lehmer_mean <- function(r) {
   }
   body(res)[[2]][[4]] <- call("arithmetic_mean", quote(x), wpow(x, w, r - 1), quote(na.rm))
   # clean up enclosing environment
-  enc <- list(r = r)
-  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  environment(res) <- getNamespace("gpindex")
   res
 }
 
@@ -172,10 +158,17 @@ nested_mean <- function(r, s, t = c(1, 1)) {
   }
   t <- as.numeric(t) # strip any attributes
   # return function
-  function(x, w1, w2, na.rm = FALSE) {
+  res <- function(x, w1, w2, na.rm = FALSE) {
     x <- c(inner_mean1(x, w1, na.rm), inner_mean2(x, w2, na.rm))
     outer_mean(x, t, na.rm)
   }
+  # clean up enclosing environment
+  enc <- list(outer_mean = outer_mean, 
+              inner_mean1 = inner_mean1, 
+              inner_mean2 = inner_mean2, 
+              t = t)
+  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
+  res
 }
 
 fisher_mean <- nested_mean(0, c(1, -1))

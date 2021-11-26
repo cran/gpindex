@@ -9,58 +9,40 @@ different_lengths <- function(...) {
   any(res != res[1])
 }
 
-#---- Checks for warnings ----
 small_but_not_zero <- function(x, tol = .Machine$double.eps^0.5) {
   abs(x) < tol && x != 0
 }
 
-#---- Wrap-around vector indexing ----
-wrap_around <- function(x, i) {
-  (i - 1) %% length(x) + 1
-}
-
-#---- Total value ----
-v <- function(p, q) {
-  sum(p * q, na.rm = TRUE)
-}
-
 #---- Custom power operator ----
 # There are a variety of optimizations for calculating power/extended means
+# These are important to keep the Pythagorean calculations relatively fast
 pow <- function(x, r) {
   if (r == 1) {
     substitute(x)
-  } else if (r == 0.5) {
-    substitute(sqrt(x))
-  } else if (r == -0.5) {
-    substitute(1 / sqrt(x))
   } else if (r == -1) {
     substitute(1 / x)
-  } else if (r < 0) {
-    substitute(1 / x^abs(r))
+  } else if (r == -2) {
+    substitute(1 / x^2)
   } else {
-    substitute(x^r)
+    eval(bquote(substitute(x^.(r))))
   }
 }
 
 wpow <- function(x, w, r) {
   if (r == 1) {
     substitute(w * x)
-  } else if (r == 0.5) {
-    substitute(w * sqrt(x))
   } else if (r == 0) {
     substitute(w)
-  } else if (r == -0.5) {
-    substitute(w / sqrt(x))
   } else if (r == -1) {
     substitute(w / x)
-  } else if (r < 0) {
-    substitute(w / x^abs(r))
+  } else if (r == -2) {
+    substitute(w / x^2)
   } else {
-    substitute(w * x^r)
+    eval(bquote(substitute(w * x^.(r))))
   }
 }
 
-#---- Geks ----
+#---- Geks helpers ----
 to_scalar <- function(x) {
   trunc(as.numeric(x[1]))
 }
