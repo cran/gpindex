@@ -1,3 +1,11 @@
+Changes in version 0.4.2
+
+- The functions and overall structure of the package should be fairly stable from now on.
+
+- Added nested_transmute() and nested_transmute2() for transmuting the weights for nested generalized means. To be consistent with argument names, the first two arguments for nested_mean() and nested_contributions*() are now 'r1' and 'r2'.
+
+- Added the geometric Theil and Rao indexes.
+
 Changes in version 0.3.9
 
 - Added back_period() and base_period(), which are more general than back_price() and base_price().

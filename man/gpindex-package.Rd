@@ -18,11 +18,11 @@ Almost all bilateral price indexes used in practice are either generalized-mean 
 }
 
 \section{Usage}{
-A generalized-mean price index is a weighted generalized mean of price relatives. Given a set of price relatives and weights, any generalized-mean price index is easily calculated with the \code{\link[=generalized_mean]{generalized_mean()}} function. What distinguishes different generalized-mean price indexes are the weights and the order of the generalized mean. For example, the standard Laspeyres index uses base-period value-share weights in a generalized mean of order 1 (arithmetic mean). Changing the order of the generalized mean to \eqn{1 - \sigma}{1 - \sigma}, where \eqn{\sigma}{\sigma} is an elasticity of substitution, gives a Lloyd-Moulton index, whereas changing the weights to current-period value-shares gives a Palgrave index. 
+A generalized-mean price index is a weighted generalized mean of price relatives. Given a set of price relatives and weights, any generalized-mean price index is easily calculated with the \code{\link[=generalized_mean]{generalized_mean()}} function. What distinguishes different generalized-mean price indexes are the weights and the order of the generalized mean. For example, the standard Laspeyres index uses base-period value-share weights in a generalized mean of order 1 (arithmetic mean). Changing the order of the generalized mean to \eqn{1 - \sigma}{1 - \sigma}, where \eqn{\sigma}{\sigma} is an elasticity of substitution, gives a Lloyd-Moulton index, whereas changing the weights to current-period value-shares gives a Palgrave index. This is the essence of the atomistic approach in chapter 2 of Selvanathan and Rao (1994).
 
 Generalized-mean indexes can also be nested together to get indexes like the Fisher, Drobisch, or AG mean index. The \code{\link[=nested_mean]{nested_mean()}} function is a simple wrapper for \code{\link[=generalized_mean]{generalized_mean()}} for these cases.
 
-Two important functions for decomposing generalized means are given by \code{\link[=transmute_weights]{transmute_weights()}} and \code{\link[=factor_weights]{factor_weights()}}. These functions augment the weights in a generalized mean, and can be used to calculate quote contributions (with, e.g., \code{\link[=contributions]{contributions()}}) and price-update weights for generalized-mean indexes. Together these functions provide the key mathematical apparatus to work with any generalized-mean index, and those that are nested generalized-mean indexes.
+Two important functions for decomposing generalized means are given by \code{\link[=transmute_weights]{transmute_weights()}} and \code{\link[=factor_weights]{factor_weights()}}. These functions augment the weights in a generalized mean, and can be used to calculate quote contributions (with, e.g., \code{\link[=contributions]{contributions()}}) and price-update weights for generalized-mean indexes. Together these functions provide the key mathematical apparatus to work with any generalized-mean index, and those that nest generalized-mean indexes.
 
 On top of these basic mathematical tools are functions for making standard price indexes when both prices and quantities are known. Weights for a large variety of indexes can be calculated with \code{\link[=index_weights]{index_weights()}}, which can be plugged into the relevant generalized mean to calculate most common price indexes, and many uncommon ones. The \code{\link{price_index}} functions provide a simple wrapper, with the \code{\link[=quantity_index]{quantity_index()}} function turning each of these into its analogous quantity index.
 
@@ -39,6 +39,8 @@ Balk, B. M. (2008). \emph{Price and Quantity Index Numbers}. Cambridge Universit
 ILO, IMF, OECD, Eurostat, UN, and World Bank. (2020). \emph{Consumer Price Index Manual: Theory and Practice}. International Monetary Fund.
 
 von der Lippe, P. (2001). \emph{Chain Indices: A Study in Price Index Theory}, Spectrum of Federal Statistics vol. 16. Federal Statistical Office, Wiesbaden.
+
+Selvanathan, E. A. and Rao, D. S. P. (1994). \emph{Index Numbers: A Stochastic Approach}. MacMillan.
 }
 
 \seealso{

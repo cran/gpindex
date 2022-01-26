@@ -5,21 +5,21 @@
 \title{Nested generalized mean}
 
 \description{
-Calculate the (outer) generalized mean of two (inner) generalized means.
+Calculate the (outer) generalized mean of two (inner) generalized means (i.e., crossing generalized means).
 }
 
 \usage{
 ## Function factory
-nested_mean(r, s, t = c(1, 1))
+nested_mean(r1, r2, t = c(1, 1))
 
 ## Special case
 fisher_mean(x, w1, w2, na.rm = FALSE)
 }
 
 \arguments{
-\item{r}{A finite number giving the order of the outer generalized mean.}
+\item{r1}{A finite number giving the order of the outer generalized mean.}
 
-\item{s}{A pair of finite numbers giving the order of the inner generalized means.}
+\item{r2}{A pair of finite numbers giving the order of the inner generalized means.}
 
 \item{t}{A pair of strictly positive weights for the inner generalized means. The default is equal weights.}
 
@@ -35,19 +35,21 @@ fisher_mean(x, w1, w2, na.rm = FALSE)
 
 \preformatted{function(x, w1, w2, na.rm = FALSE){...}}
 
-This computes the generalized mean of order \code{r} of the generalized mean of order \code{s[1]} of \code{x} with weights \code{w1} and the generalized mean of order \code{s[2]} of \code{x} with weights \code{w2}.
+This computes the generalized mean of order \code{r1} of the generalized mean of order \code{r2[1]} of \code{x} with weights \code{w1} and the generalized mean of order \code{r2[2]} of \code{x} with weights \code{w2}.
 
-\code{fisher_mean()} returns a numeric value for the geometric mean of the arithmetic and harmonic means (i.e., \code{r = 0} and \code{s = c(1, -1)}).
+\code{fisher_mean()} returns a numeric value for the geometric mean of the arithmetic and harmonic means (i.e., \code{r1 = 0} and \code{r2 = c(1, -1)}).
 }
 
 \note{
-There is some ambiguity about how to remove missing values in \code{w1} or \code{w2} when \code{na.rm = TRUE}. The approach here is to remove missing values when calculating each of the inner means individually, rather than removing all missing values prior to any calculations. This means that a different number of data points could be used to calculate the inner means. Use the \code{\link[=balanced]{balanced()}} operator to balanced missing values across \code{w1} and {w2} prior to any calculations.
+There is some ambiguity about how to remove missing values in \code{w1} or \code{w2} when \code{na.rm = TRUE}. The approach here is to remove missing values when calculating each of the inner means individually, rather than removing all missing values prior to any calculations. This means that a different number of data points could be used to calculate the inner means. Use the \code{\link[=balanced]{balanced()}} operator to balance missing values across \code{w1} and {w2} prior to any calculations.
 }
 
 \references{
 Diewert, W. E. (1976). Exact and superlative index numbers. \emph{Journal of Econometrics}, 4(2): 114--145.
 
-Lent, J. and Dorfman, A, H. (2009). Using a weighted average of base period price indexes to approximate a superlative index. \emph{Journal of Official Statistics}, 25(1):139--149.
+ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Producer Price Index Manual: Theory and Practice}. International Monetary Fund.
+
+Lent, J. and Dorfman, A. H. (2009). Using a weighted average of base period price indexes to approximate a superlative index. \emph{Journal of Official Statistics}, 25(1):139--149.
 }
 
 \seealso{
@@ -84,6 +86,25 @@ quadratic_mean_index2(2)(x, w1, w2)
 agmean_index <- function(tau) nested_mean(1, c(0, 1), c(tau, 1 - tau))
 
 agmean_index(0.25)(x, w1, w1)
+
+#---- Walsh index ----
+
+# The (arithmetic) Walsh index is the implicit price index when using a
+# superlative quadratic mean quantity index of order 1
+
+p1 <- price6[[2]]; p0 <- price6[[1]]
+q1 <- quantity6[[2]]; q0 <- quantity6[[1]]
+
+walsh <- quadratic_mean_index2(1)
+
+sum(p1 * q1) / sum(p0 * q0) / walsh(q1 / q0, p0 * q0, p1 * q1)
+
+sum(p1 * sqrt(q1 * q0)) / sum(p0 * sqrt(q1 * q0))
+
+# Counter to the PPI manual (par. 1.105), it is not a
+# superlative quadratic mean price index of order 1
+
+walsh(p1 / p0, p0 * q0, p1 * q1)
 
 #---- Missing values ----
 
