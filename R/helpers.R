@@ -41,13 +41,3 @@ wpow <- function(x, w, r) {
     eval(bquote(substitute(w * x^.(r))))
   }
 }
-
-#---- Geks helpers ----
-to_scalar <- function(x) {
-  trunc(as.numeric(x[1L]))
-}
-
-rolling_window <- function(n, window) {
-  steps <- seq_len(n - window + 1)
-  Map(seq, from = steps, length.out = window)
-}

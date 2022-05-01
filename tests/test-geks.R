@@ -6,6 +6,15 @@ inr <- requireNamespace("IndexNumR", quietly = TRUE)
 all.equal(fisher_geks(integer(0), numeric(0), logical(0), character(0)),
           list())
 
+fisher_geks(integer(0), numeric(0), factor(logical(0), 1:5), character(0))
+
+fisher_geks(c(1, 5, 4, 2, 3, 6, 1, 2), 
+            c(1, 1, 2, 2, 1, 2, 3, 1), 
+            c(1, 1, 1, 1, 2, 2, 2, 2),
+            c("a", "b", "c", "d", "a", "b", "c", "d"))
+
+fisher_index(c(3, 6, 1, 2), c(1, 5, 4, 2), c(1, 2, 3, 1), c(1, 1, 2, 2))
+
 tornqvist_geks(1:2, 1:2, letters[1:2], c(1, 1))
 
 # Compare with the IndexNumR::GEKSIndex
@@ -55,6 +64,14 @@ all.equal(cumprod(as.numeric(unlist(with(dat, geks(arithmetic_index("Walsh1"))(p
               c(1.0566699129383, 1.11378295838144, 1.17139426903106, 1.22956960896297, 1.28838882562161, 1.34795095779689, 1.40838221049365, 1.46984928172641, 1.53258374680655, 1.59693277586978, 1.66348762735518, 1.7335492978583)
           })
 
+(test <- with(dat, geks(arithmetic_index("Walsh1"))(price, quantity, period, product, 10, 3)))
+all.equal(cumprod(as.numeric(unlist(as.numeric(c(test[[1]], test[[2]][3], test[[3]][3], test[[4]][3]))))), 
+          if (inr) {
+            {res <- as.numeric(IndexNumR::GEKSIndex(dat, "price", "quantity", "period", "walsh", prodID = "product", window = 10, splice = "movement")); res[8:13] / res[7]}
+          } else {
+            c(1.044688300757481, 1.090268005747500, 1.136945278111909, 1.184556889920806, 1.233276530383314, 1.283484684164579)
+          })
+
 dat <- dat[-c(2:3, 7, 15, 64), ]
 
 all.equal(cumprod(as.numeric(unlist(with(dat, geks(balanced(geometric_index("Tornqvist")))(price, quantity, period, product, na.rm = TRUE))))), 
@@ -84,3 +101,13 @@ all.equal(with(dat, geks(balanced(fisher_index))(price, quantity, period, produc
 
 all.equal(with(dat, geks(balanced(fisher_index))(price, quantity, period, product, na.rm = TRUE)),
           with(dat, geks(balanced(quantity_index(fisher_index)))(period, p = quantity, product, na.rm = TRUE, q = price)))
+
+# 'n' shouldn't change subsequent values
+all.equal(with(dat, fisher_geks(price, quantity, period, product, na.rm = TRUE, n = 7)[[1]]),
+          with(dat, fisher_geks(price, quantity, period, product, na.rm = TRUE))[[1]][6:12])
+
+all.equal(with(dat, fisher_geks(price, quantity, period, product, na.rm = TRUE, n = 7)[[1]][6:7]),
+          with(dat, fisher_geks(price, quantity, period, product, na.rm = TRUE, n = 2))[[1]])
+
+all.equal(lapply(with(dat, tornqvist_geks(price, quantity, period, product, na.rm = TRUE, window = 9, n = 6)), `[`, 6),
+          with(dat, tornqvist_geks(price, quantity, period, product, na.rm = TRUE, window = 9, n = 1)))

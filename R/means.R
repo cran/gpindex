@@ -14,10 +14,8 @@ generalized_mean <- function(r) {
     if (missing(w)) {
       # removing NAs first means that NaNs for log(x), x < 0,
       # are not removed when na.rm = TRUE
-      if (na.rm) {
-        if (anyNA(x)) {
-          x <- x[!is.na(x)]
-        }
+      if (na.rm && anyNA(x)) {
+        x <- x[!is.na(x)]
       }
       # [[2]][[3]][[3]] unweighted calculation
     # weights
@@ -25,25 +23,23 @@ generalized_mean <- function(r) {
       if (length(x) != length(w)) {
         stop(gettext("'x' and 'w' must be the same length"))
       }
-      if (na.rm) {
-        if (anyNA(x) || anyNA(w)) {
-          keep <- !(is.na(x) | is.na(w))
-          x <- x[keep]
-          w <- w[keep]
-        }
+      if (na.rm && (anyNA(x) || anyNA(w))) {
+        keep <- !(is.na(x) | is.na(w))
+        x <- x[keep]
+        w <- w[keep]
       }
       # [[2]][[4]][[4]] weighted calculation
     }
   }
   # unweighted calculation
-  body(res)[[2L]][[3L]][[3L]] <- if (r == 0) {
+  body(res)[[c(2L, 3L, 3L)]] <- if (r == 0) {
     quote(exp(sum(log(x)) / length(x)))
   } else {
     z <- bquote(pow(sum(.(pow(x, r))) / length(x), 1 / r))
     eval(z)
   }
   # weighted calculation
-  body(res)[[2L]][[4L]][[4L]] <- if (r == 0) {
+  body(res)[[c(2L, 4L, 4L)]] <- if (r == 0) {
     quote(exp(sum(w * log(x)) / sum(w)))
   } else {
     z <- bquote(pow(sum(.(wpow(x, w, r))) / sum(w), 1 / r))
@@ -132,12 +128,12 @@ lehmer_mean <- function(r) {
       # [[2]][[4]] weighted calculation
     }
   }
-  body(res)[[2L]][[3L]] <- if (r != 1) {
+  body(res)[[c(2L, 3L)]] <- if (r != 1) {
     call("arithmetic_mean", quote(x), pow(x, r - 1), quote(na.rm))
   } else {
     call("arithmetic_mean", quote(x), na.rm = quote(na.rm))
   }
-  body(res)[[2L]][[4L]] <- call("arithmetic_mean", quote(x), wpow(x, w, r - 1), quote(na.rm))
+  body(res)[[c(2L, 4L)]] <- call("arithmetic_mean", quote(x), wpow(x, w, r - 1), quote(na.rm))
   # clean up enclosing environment
   environment(res) <- getNamespace("gpindex")
   res

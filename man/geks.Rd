@@ -30,7 +30,7 @@ fisher_geks(p, q, period, product,
 \item{period}{A factor, or something that can be coerced into one, that gives the corresponding time period for each element in \code{p} and \code{q}. The ordering of time periods follows the levels of \code{period} to agree with \code{\link[=cut.Date]{cut()}}.}
 \item{product}{A factor, or something that can be coerced into one, that gives the corresponding product identifier for each element in \code{p} and \code{q}.}
 \item{window}{The length of the rolling window. The default is a window that encompasses all periods in \code{period}. Values that are neither integers nor length 1 are silently truncated to a length 1 integer.}
-\item{n}{A number giving the length of the index series for each window. For example, if there are 13 periods in \code{window}, setting \code{n = 1} gives the index for period 13. The default gives an index for each period in \code{window}. Values that are neither integers nor length 1 are silently truncated to a length 1 integer.}
+\item{n}{A number giving the length of the index series for each window, starting from the end of the window. For example, if there are 13 periods in \code{window}, setting \code{n = 1} gives the index for period 13. The default gives an index for each period in \code{window}. Values that are neither integers nor length 1 are silently truncated to a length 1 integer.}
 \item{na.rm}{Should missing values for \code{p} and \code{q} be removed when calculating the index? By default missing values will return a missing value for the index.}
 }
 
@@ -45,6 +45,10 @@ function(p, q, period, product,
 This calculates a period-over-period GEKS index with the desired index-number formula, returning a list for each window with a named-numeric vector of index values.
 
 \code{tornqvist_geks()} and \code{fisher_geks()} both return a list with a named numeric vector giving the value of the respective period-over-period GEKS index for each window.
+}
+
+\note{
+Like \code{\link[=back_period]{back_period}}, if multiple prices correspond to a period-product pair, then the back price at a point in time is always the first price for that product in the previous period. Unlike a bilateral index, however, duplicated period-product pairs can have more subtle implications for a multilateral index.
 }
 
 \references{
