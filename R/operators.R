@@ -1,10 +1,10 @@
 quantity_index <- function(f) {
   f <- match.fun(f)
-  concord <- c(p1 = "q1", p0 = "q0", 
-               q1 = "p1", q0 = "p0", 
+  concord <- c(p1 = "q1", p0 = "q0",
+               q1 = "p1", q0 = "p0",
                pb = "qb", qb = "pb",
                p  = "q",  q  = "p")
-  # return function
+
   function(...) {
     dots <- list(...)
     pqs <- names(dots) %in% concord
@@ -17,23 +17,31 @@ grouped <- function(f, ...) {
   f <- match.fun(f)
   ngargs <- list(...)
   if ("group" %in% names(formals(f))) {
-    stop(gettext("'f' already has an argument called 'group'"))
+    stop("'f' already has an argument called 'group'")
   }
-  # return function
+
   function(..., group) {
     group <- as.factor(group)
+    if (nlevels(group) == 0L) {
+      stop("'group' has no levels to group by")
+    }
+
     args <- lapply(list(...), split, group)
     res <- .mapply(f, args, ngargs)
-    res <- unsplit(res, group)
-    attributes(res) <- NULL # unsplit mangles attributes
-    res
+    # same as unsplit(), but keeps names
+    x <- res[[1L]][rep.int(NA_integer_, length(group))]
+    split(x, group) <- res
+    if (!is.null(names(x))) {
+      split(names(x), group) <- lapply(res, names)
+    }
+    x
   }
 }
 
 balanced <- function(f, ...) {
   f <- match.fun(f)
   nbargs <- list(...)
-  # return function
+
   function(..., na.rm = FALSE) {
     dots <- list(...)
     if (na.rm) {

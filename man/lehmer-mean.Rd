@@ -13,7 +13,7 @@ Calculate a Lehmer mean.
 lehmer_mean(r)
 
 ## Special case
-contraharmonic_mean(x, w, na.rm = FALSE)
+contraharmonic_mean(x, w = NULL, na.rm = FALSE)
 }
 
 \arguments{
@@ -27,9 +27,9 @@ contraharmonic_mean(x, w, na.rm = FALSE)
 }
 
 \details{
-The function \code{lehmer_mean()} returns a function to compute the Lehmer mean of order \code{r} of \code{x} with weights \code{w}, which is calculated as the arithmetic mean of \code{x} with weights \eqn{wx^{r-1}}{wx^(r-1)}. This is also called the counter-harmonic mean or generalized anti-harmonic mean. See Bullen (2003, p. 245) for a definition, or \url{https://en.wikipedia.org/wiki/Lehmer_mean}.
+The function \code{lehmer_mean()} returns a function to compute the Lehmer mean of order \code{r} of \code{x} with weights \code{w}, which is calculated as the arithmetic mean of \code{x} with weights \eqn{wx^{r-1}}. This is also called the counter-harmonic mean or generalized anti-harmonic mean. See Bullen (2003, p. 245) for a definition, or \url{https://en.wikipedia.org/wiki/Lehmer_mean}.
 
-The Lehmer mean of order 2 is sometimes called the contraharmonic (or anti-harmonic) mean. The function \code{contraharmonic_mean()} simply calls \code{lehmer_mean(2)()}. Like the generalized mean, the contraharmonic mean is the solution to an optimal prediction problem: choose \eqn{m}{m} to minimize \eqn{\sum_{i = 1}^{n} w_{i} \left(\frac{x_{i}}{m} - 1 \right)^2}{\sum w (x / m - 1)^2}. The Lehmer mean of order -1 has a similar interpretation, replacing \eqn{\frac{x_{i}}{m}}{x / m} with \eqn{\frac{m}{x_{i}}}{m / x}, and together these bound the harmonic and arithmetic means.
+The Lehmer mean of order 2 is sometimes called the contraharmonic (or anti-harmonic) mean. The function \code{contraharmonic_mean()} simply calls \code{lehmer_mean(2)()}. Like the generalized mean, the contraharmonic mean is the solution to an optimal prediction problem: choose \eqn{m} to minimize \eqn{\sum_{i = 1}^{n} w_{i} \left(\frac{x_{i}}{m} - 1 \right)^2}{\sum w (x / m - 1)^2}. The Lehmer mean of order -1 has a similar interpretation, replacing \eqn{\frac{x_{i}}{m}}{x / m} with \eqn{\frac{m}{x_{i}}}{m / x}, and together these bound the harmonic and arithmetic means.
 
 Both \code{x} and \code{w} should be strictly positive. This is not enforced, but the results may not make sense if the generalized mean in not defined. 
 
@@ -39,7 +39,7 @@ The Lehmer mean is an alternative to the generalized mean that generalizes the P
 \value{
 \code{lehmer_mean()} returns a function:
 
-\preformatted{function(x, w, na.rm = FALSE){...}}
+\preformatted{function(x, w = NULL, na.rm = FALSE){...}}
 
 This computes the Lehmer mean of order \code{r} of \code{x} with weights \code{w}.
 
@@ -76,8 +76,8 @@ all.equal(lehmer_mean(0.5)(x), geometric_mean(x))
 
 #---- Comparing Lehmer means and generalized means ----
 
-# When r < 1, the generalized mean is larger than the 
-# corresponding Lehmer mean
+# When r < 1, the generalized mean is larger than the corresponding 
+# Lehmer mean
 
 lehmer_mean(-1)(x, w) < generalized_mean(-1)(x, w)
 
@@ -85,19 +85,19 @@ lehmer_mean(-1)(x, w) < generalized_mean(-1)(x, w)
 
 lehmer_mean(3)(x, w) > generalized_mean(3)(x, w)
 
-# This implies the contraharmonic mean is larger than the 
-# quadratic mean, and therefore the Pythagorean means
+# This implies the contraharmonic mean is larger than the quadratic 
+# mean, and therefore the Pythagorean means
 
 contraharmonic_mean(x, w) > arithmetic_mean(x, w)
 contraharmonic_mean(x, w) > geometric_mean(x, w)
 contraharmonic_mean(x, w) > harmonic_mean(x, w)
 
-# and the logarithmic mean
+# ... and the logarithmic mean
 
 contraharmonic_mean(2:3) > logmean(2, 3)
 
-# The difference between the arithmetic mean and 
-# contraharmonic mean is proportional to the variance of x
+# The difference between the arithmetic mean and contraharmonic mean 
+# is proportional to the variance of x
 
 weighted_var <- function(x, w) {
   arithmetic_mean(x^2, w) - arithmetic_mean(x, w)^2
@@ -123,15 +123,15 @@ lehmer_mean(s)(x, w * x^(r - 1) / x^(s - 1))
 lehmer_mean(r)(x, w)
 generalized_mean(s)(x, transmute_weights(1, s)(x, w * x^(r - 1)))
 
-# and vice versa
+# ... and vice versa
 
 lehmer_mean(r)(x, transmute_weights(s, 1)(x, w) / x^(r - 1))
 generalized_mean(s)(x, w)
 
-#---- Quote contributions ----
+#---- Percent-change contributions ----
 
-# Quote contributions for a price index based on the Lehmer mean
-# are easy to calculate
+# Percent-change contributions for a price index based on the Lehmer 
+# mean are easy to calculate
 
 scale_weights(w * x^(r - 1)) * (x - 1)
 }

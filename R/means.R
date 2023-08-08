@@ -1,53 +1,36 @@
 #---- Generalized mean ----
-globalVariables(c("x", "w"), "gpindex", add = TRUE)
-
 generalized_mean <- function(r) {
-  if (not_number(r)) {
-    stop(gettext("'r' must be a finite length 1 numeric"))
+  r <- as.numeric(r)
+  if (not_finite_scalar(r)) {
+    stop("'r' must be a finite length 1 numeric")
   }
-  if (small_but_not_zero(r)) {
-    warning(gettext("'r' is very small in absolute value, but not zero; this can give misleading results"))
-  }
-  # return function
-  res <- function(x, w, na.rm = FALSE) {
-    # no weights
-    if (missing(w)) {
-      # removing NAs first means that NaNs for log(x), x < 0,
-      # are not removed when na.rm = TRUE
+
+  function(x, w = NULL, na.rm = FALSE) {
+    if (is.null(w)) {
       if (na.rm && anyNA(x)) {
         x <- x[!is.na(x)]
       }
-      # [[2]][[3]][[3]] unweighted calculation
-    # weights
+      if (r == 0) {
+        exp(sum(log(x)) / length(x))
+      } else {
+        (sum(x^r) / length(x))^(1 / r)
+      }
     } else {
       if (length(x) != length(w)) {
-        stop(gettext("'x' and 'w' must be the same length"))
+        stop("'x' and 'w' must be the same length")
       }
       if (na.rm && (anyNA(x) || anyNA(w))) {
         keep <- !(is.na(x) | is.na(w))
         x <- x[keep]
         w <- w[keep]
       }
-      # [[2]][[4]][[4]] weighted calculation
+      if (r == 0) {
+        exp(sum(log(x) * w) / sum(w))
+      } else {
+        (sum(x^r * w) / sum(w))^(1 / r)
+      }
     }
   }
-  # unweighted calculation
-  body(res)[[c(2L, 3L, 3L)]] <- if (r == 0) {
-    quote(exp(sum(log(x)) / length(x)))
-  } else {
-    z <- bquote(pow(sum(.(pow(x, r))) / length(x), 1 / r))
-    eval(z)
-  }
-  # weighted calculation
-  body(res)[[c(2L, 4L, 4L)]] <- if (r == 0) {
-    quote(exp(sum(w * log(x)) / sum(w)))
-  } else {
-    z <- bquote(pow(sum(.(wpow(x, w, r))) / sum(w), 1 / r))
-    eval(z)
-  }
-  # clean up enclosing environment
-  environment(res) <- getNamespace("gpindex")
-  res
 }
 
 arithmetic_mean <- generalized_mean(1)
@@ -57,56 +40,33 @@ geometric_mean <- generalized_mean(0)
 harmonic_mean <- generalized_mean(-1)
 
 #---- Extended mean ----
-globalVariables(c("a", "b"), "gpindex", add = TRUE)
-
 extended_mean <- function(r, s) {
-  if (not_number(r)) {
-    stop(gettext("'r' must be a finite length 1 numeric"))
+  r <- as.numeric(r)
+  s <- as.numeric(s)
+  if (not_finite_scalar(r)) {
+    stop("'r' must be a finite length 1 numeric")
   }
-  if (not_number(s)) {
-    stop(gettext("'s' must be a finite length 1 numeric"))
+  if (not_finite_scalar(s)) {
+    stop("'s' must be a finite length 1 numeric")
   }
-  if (small_but_not_zero(r)) {
-    warning(gettext("'r' is very small in absolute value, but not zero; this can give misleading results"))
-  }
-  if (small_but_not_zero(s)) {
-    warning(gettext("'s' is very small in absolute value, but not zero; this can give misleading results"))
-  }
-  if (small_but_not_zero(r - s)) {
-    warning(gettext("'r' and 's' are very close in value, but not equal; this can give misleading results"))
-  }
-  # return function
-  res <- function(a, b, tol = .Machine$double.eps^0.5) {
-    res # placeholder for the calculation
+
+  function(a, b, tol = .Machine$double.eps^0.5) {
+    if (r == 0 && s == 0) {
+      res <- sqrt(a * b)
+    } else if (r == 0) {
+      res <- ((a^s - b^s) / log(a / b) / s)^(1 / s)
+    } else if (s == 0) {
+      res <- ((a^r - b^r) / log(a / b) / r)^(1 / r)
+    } else if (r == s) {
+      res <- exp((a^r * log(a) - b^r * log(b)) / (a^r - b^r) - 1 / r)
+    } else {
+      res <- ((a^s - b^s) / (a^r - b^r) * r / s)^(1 / (s - r))
+    }
     # set output to a when a == b
     i <- which(abs(a - b) <= tol)
     res[i] <- a[(i - 1L) %% length(a) + 1L]
     res
   }
-  expr <- if (r == 0 && s == 0) {
-    quote(sqrt(a * b))
-  } else if (r == 0) {
-    # ((a^s - b^s) / log(a / b) / s)^(1 / s)
-    z <- bquote((.(pow(a, s)) - .(pow(b, s))) / log(a / b))
-    # this saves dividing by 1, a common case
-    if (s != 1) eval(bquote(pow(.(z) / .(s), 1 / s))) else z
-  } else if (s == 0) {
-    # ((a^r - b^r) / log(a / b) / r)^(1 / r)
-    z <- bquote((.(pow(a, r)) - .(pow(b, r))) / log(a / b))
-    if (r != 1) eval(bquote(pow(.(z) / .(r), 1 / r))) else z
-  } else if (r == s) {
-    # exp((a^r * log(a) - b^r * log(b)) / (a^r - b^r) - 1 / r)
-    bquote(exp((.(pow(a, r)) * log(a) - .(pow(b, r)) * log(b)) / 
-                 (.(pow(a, r)) - .(pow(b, r))) - .(1 / r)))
-  } else {
-    # ((a^s - b^s) / (a^r - b^r) * r / s)^(1 / (s - r))
-    z <- bquote((.(pow(a, s)) - .(pow(b, s))) / (.(pow(a, r)) - .(pow(b, r))))
-    eval(bquote(pow(.(z) * .(r / s), 1 / (s - r))))
-  }
-  body(res)[[2L]] <- call("<-", quote(res), expr)
-  # clean up enclosing environment
-  environment(res) <- getNamespace("gpindex")
-  res
 }
 
 generalized_logmean <- function(r) {
@@ -117,26 +77,18 @@ logmean <- generalized_logmean(0)
 
 #---- Lehmer mean ----
 lehmer_mean <- function(r) {
-  if (not_number(r)) {
-    stop(gettext("'r' must be a finite length 1 numeric"))
+  r <- as.numeric(r)
+  if (not_finite_scalar(r)) {
+    stop("'r' must be a finite length 1 numeric")
   }
-  # return function
-  res <- function(x, w, na.rm = FALSE) {
-    if (missing(w)) {
-      # [[2]][[3]] unweighted calculation
-    } else {
-      # [[2]][[4]] weighted calculation
+
+  function(x, w = NULL, na.rm = FALSE) {
+    v <- x^(r - 1)
+    if (!is.null(w)) {
+      v <- v * w
     }
+    arithmetic_mean(x, v, na.rm = na.rm)
   }
-  body(res)[[c(2L, 3L)]] <- if (r != 1) {
-    call("arithmetic_mean", quote(x), pow(x, r - 1), quote(na.rm))
-  } else {
-    call("arithmetic_mean", quote(x), na.rm = quote(na.rm))
-  }
-  body(res)[[c(2L, 4L)]] <- call("arithmetic_mean", quote(x), wpow(x, w, r - 1), quote(na.rm))
-  # clean up enclosing environment
-  environment(res) <- getNamespace("gpindex")
-  res
 }
 
 contraharmonic_mean <- lehmer_mean(2)
@@ -144,27 +96,24 @@ contraharmonic_mean <- lehmer_mean(2)
 #---- Nested mean ----
 nested_mean <- function(r1, r2, t = c(1, 1)) {
   outer_mean <- generalized_mean(r1)
-  if (length(r2) != 2L) {
-    stop(gettext("'r2' must be a pair of numeric values"))
+
+  r2 <- as.numeric(r2)
+  if (not_finite_pair(r2)) {
+    stop("'r2' must be a pair of finite numeric values")
   }
+
   inner_mean1 <- generalized_mean(r2[1L])
   inner_mean2 <- generalized_mean(r2[2L])
-  if (length(t) != 2L || !is.numeric(t)) {
-    stop(gettext("'t' must be a pair of numeric values"))
+
+  t <- as.numeric(t)
+  if (length(t) != 2) {
+    stop("'t' must be a pair of numeric values")
   }
-  t <- as.numeric(t) # strip any attributes
-  # return function
-  res <- function(x, w1, w2, na.rm = FALSE) {
+
+  function(x, w1 = NULL, w2 = NULL, na.rm = FALSE) {
     x <- c(inner_mean1(x, w1, na.rm), inner_mean2(x, w2, na.rm))
     outer_mean(x, t, na.rm)
   }
-  # clean up enclosing environment
-  enc <- list(outer_mean = outer_mean, 
-              inner_mean1 = inner_mean1, 
-              inner_mean2 = inner_mean2, 
-              t = t)
-  environment(res) <- list2env(enc, parent = getNamespace("gpindex"))
-  res
 }
 
 fisher_mean <- nested_mean(0, c(1, -1))

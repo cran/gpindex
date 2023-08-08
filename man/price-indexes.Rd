@@ -110,7 +110,7 @@ The \code{arithmetic_index()}, \code{geometric_index()}, and \code{harmonic_inde
 \item Geometric Laspeyres
 \item Geometric Paasche
 \item Geometric Young
-\item Tornqvist (or Tornqvist-Theil)
+\item Törnqvist (or Törnqvist-Theil)
 \item Montgomery-Vartia / Vartia-I
 \item Sato-Vartia / Vartia-II
 \item Walsh-II (geometric Walsh)
@@ -137,7 +137,7 @@ The \code{index_weights()} function returns a function to calculate weights for 
 \item Hybrid Laspeyres (for use in a harmonic mean)
 \item Paasche / Palgrave
 \item Hybrid Paasche (for use in an arithmetic mean)
-\item Tornqvist / Unnamed
+\item Törnqvist / Unnamed
 \item Drobisch
 \item Walsh-I (for an arithmetic Walsh index)
 \item Walsh-II (for a geometric Walsh index)
@@ -163,7 +163,7 @@ Naming for the indexes and weights generally follows the CPI manual (2020), Balk
 \note{
 There are different ways to deal with missing values in a price index, and care should be taken when relying on these functions to remove missing values. Setting \code{na.rm = TRUE} removes price relatives with missing information, either because of a missing price or a missing weight, while using all available non-missing information to make the weights. 
 
-Certain properties of an index-number formula may not work as expected when removing missing values if there is ambiguity about how to remove missing values from the weights (as in, e.g., a Tornqvist or Sato-Vartia index). The \code{\link[=balanced]{balanced()}} operator may be helpful, as it balances the removal of missing values across prices and quantities prior to making the weights.
+Certain properties of an index-number formula may not work as expected when removing missing values if there is ambiguity about how to remove missing values from the weights (as in, e.g., a Törnqvist or Sato-Vartia index). The \code{\link[=balanced]{balanced()}} operator may be helpful, as it balances the removal of missing values across prices and quantities prior to making the weights.
 }
 
 \references{
@@ -183,7 +183,7 @@ Selvanathan, E. A. and Rao, D. S. P. (1994). \emph{Index Numbers: A Stochastic A
 \seealso{
 \code{\link{generalized_mean}} for the generalized mean that powers most of these functions. 
 
-\code{\link{contributions}} for calculating quote contributions. 
+\code{\link{contributions}} for calculating percent-change contributions. 
 
 \code{\link{update_weights}} for price-updating weights.
 
@@ -206,8 +206,8 @@ qb <- quantity6[[1]]
 
 #---- Calculating price indexes ----
 
-# Most indexes can be calculated by combining the appropriate 
-# weights with the correct type of mean
+# Most indexes can be calculated by combining the appropriate weights 
+# with the correct type of mean
 
 geometric_index("Laspeyres")(p1, p0, q0)
 geometric_mean(p1 / p0, index_weights("Laspeyres")(p0, q0))
@@ -225,11 +225,13 @@ harmonic_mean(p1 / p0, index_weights("HybridLaspeyres")(p1, q0))
 
 all.equal(
   scale_weights(index_weights("HybridLaspeyres")(p1, q0)),
-  scale_weights(transmute_weights(1, -1)(p1 / p0, index_weights("Laspeyres")(p0, q0)))
+  scale_weights(
+    transmute_weights(1, -1)(p1 / p0, index_weights("Laspeyres")(p0, q0))
+  )
 )
 
-# This strategy can be used to make more exotic indexes,
-# like the quadratic-mean index (von der Lippe, 2001, p. 71)
+# This strategy can be used to make more exotic indexes, like the 
+# quadratic-mean index (von der Lippe, 2001, p. 71)
 
 generalized_mean(2)(p1 / p0, index_weights("Laspeyres")(p0, q0))
 
@@ -242,9 +244,9 @@ log(arithmetic_mean(exp(p1 / p0), index_weights("Laspeyres")(p0, q0)))
 arithmetic_mean(p1 / p0, index_weights("HybridLaspeyres")(p1, q0))
 contraharmonic_mean(p1 / p0, index_weights("Laspeyres")(p0, q0))
 
-# Unlike its arithmetic counterpart, the geometric Laspeyres 
-# can increase when base-period prices increase if some of these 
-# prices are small
+# Unlike its arithmetic counterpart, the geometric Laspeyres can 
+# increase when base-period prices increase if some of these prices 
+# are small
 
 gl <- geometric_index("Laspeyres")
 p0_small <- replace(p0, 1, p0[1] / 5)
@@ -272,9 +274,9 @@ w_pu <- factor_weights(-1)(p1 / p0, index_weights("Laspeyres")(p0, q0))
 I2 <- harmonic_mean(p2 / p1, w_pu)
 I1 * I2
 
-#---- Quote contributions ----
+#---- Percent-change contributions ----
 
-# Quote contributions for the Tornqvist index
+# Percent-change contributions for the Tornqvist index
 
 w <- index_weights("Tornqvist")(p1, p0, q1, q0)
 (con <- geometric_contributions(p1 / p0, w))
@@ -322,8 +324,8 @@ p1a <- p1[1:3]; p1b <- p1[4:6]
 q0a <- q0[1:3]; q0b <- q0[4:6]
 q1a <- q1[1:3]; q1b <- q1[4:6]
 
-# Indexes based on the generalized mean with value share weights
-# are consistent in aggregation
+# Indexes based on the generalized mean with value share weights are 
+# consistent in aggregation
 
 lm_index(0.75)(p1, p0, q0)
 
@@ -337,10 +339,9 @@ generalized_mean(0.25)(c(Ia, Ib), c(sum(w[1:3]), sum(w[4:6])))
 all.equal(lm_index(0.75)(p1a, p0a, q0a), Ia)
 all.equal(lm_index(0.75)(p1b, p0b, q0b), Ib)
 
-# Care is needed with more complex weights, e.g., Drobisch,
-# as this doesn't fit Balk's (2008) definition (p. 113) of
-# a generalized-mean index (it's the arithmetic mean of a Laspeyres
-# and Paasche index)
+# Care is needed with more complex weights, e.g., Drobisch, as this 
+# doesn't fit Balk's (2008) definition (p. 113) of a generalized-mean 
+# index (it's the arithmetic mean of a Laspeyres and Paasche index)
 
 arithmetic_index("Drobisch")(p1, p0, q1, q0)
 
@@ -408,8 +409,10 @@ all.equal(index_weights("GearyKhamis")(p0, q1, q0),
 
 # Montgomery-Vartia / Vartia-I
 
-all.equal(index_weights("MontgomeryVartia")(p1, p0, q1, q0),
-          logmean(p0 * q0, p1 * q1) / logmean(sum(p0 * q0), sum(p1 * q1)))
+all.equal(
+  index_weights("MontgomeryVartia")(p1, p0, q1, q0),
+  logmean(p0 * q0, p1 * q1) / logmean(sum(p0 * q0), sum(p1 * q1))
+)
 
 # Sato-Vartia / Vartia-II
 

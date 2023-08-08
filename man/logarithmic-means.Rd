@@ -36,7 +36,7 @@ The function \code{logmean()} returns the ordinary component-wise logarithmic me
 
 Both \code{a} and \code{b} should be strictly positive. This is not enforced, but the results may not make sense when the generalized logarithmic mean / extended mean is not defined. The usual recycling rules apply when \code{a} and \code{b} are not the same length.
 
-By definition, the generalized logarithmic mean / extended mean of \code{a} and \code{b} is \code{a} when \code{a == b}. The \code{tol} argument is used to test equality by checking if \code{abs(a - b) <= tol}. The default value is the same as \code{\link[=all.equal]{all.equal()}}. Setting \code{tol = 0} will test for exact equality, but can give misleading results when \code{a} and \code{b} are computed values.
+By definition, the generalized logarithmic mean / extended mean of \code{a} and \code{b} is \code{a} when \code{a == b}. The \code{tol} argument is used to test equality by checking if \code{abs(a - b) <= tol}. The default value is the same as \code{\link[=all.equal]{all.equal()}}. Setting \code{tol = 0} tests for exact equality, but can give misleading results when \code{a} and \code{b} are computed values. In some cases it's useful to multiply \code{tol} by a scale factor, such as \code{max(abs(a), abs(b))}. This often doesn't matter when making price indexes, however, as \code{a} and \code{b} are usually around 1.
 }
 
 \value{
@@ -47,10 +47,6 @@ By definition, the generalized logarithmic mean / extended mean of \code{a} and 
 This computes the component-wise generalized logarithmic mean of order \code{r}, or the extended mean of orders \code{r} and \code{s}, of \code{a} and \code{b}.
 
 \code{logmean()} returns a numeric vector, the same length as \code{max(length(a), length(b))}, giving the component-wise logarithmic mean of \code{a} and \code{b}.
-}
-
-\section{Warning}{
-Passing very small values for \code{r} or \code{s} can give misleading results, and warning is given whenever \code{abs(r)} or \code{abs(s)} is sufficiently small. Similarly, values for \code{r} and \code{s} that are very close, but not equal, can give misleading results. In general, \code{r} and \code{s} should not be computed values.
 }
 
 \note{
@@ -68,7 +64,7 @@ Stolarsky, K. B. (1975). Generalizations of the Logarithmic Mean. \emph{Mathemat
 \seealso{
 \code{\link{generalized_mean}} for the generalized mean. 
 
-\code{\link{transmute_weights}} uses the extended mean to turn a generalized mean of order \eqn{r}{r} into a generalized mean of order \eqn{s}{s}.
+\code{\link{transmute_weights}} uses the extended mean to turn a generalized mean of order \eqn{r} into a generalized mean of order \eqn{s}.
 }
 
 \examples{
@@ -89,8 +85,8 @@ all.equal(generalized_logmean(-1)(x, y), sqrt(x * y))
 all(logmean(x, y) < (x + y) / 2) & 
   all(logmean(x, y) > sqrt(x * y))
 
-# The harmonic mean cannot be expressed as a logarithmic mean, 
-# but can be expressed as an extended mean
+# The harmonic mean cannot be expressed as a logarithmic mean, but can 
+# be expressed as an extended mean
 
 all.equal(extended_mean(-2, -1)(x, y), 2 / (1 / x + 1 / y))
 
@@ -107,9 +103,9 @@ all.equal(extended_mean(2, 3)(x, y),
 
 #---- Approximating the logarithmic mean ----
 
-# The logarithmic mean can be approximated as a convex 
-# combination of the arithmetic and geometric means that gives 
-# more weight to the geometric mean
+# The logarithmic mean can be approximated as a convex combination of 
+# the arithmetic and geometric means that gives more weight to the 
+# geometric mean
 
 approx1 <- 1 / 3 * (x + y) / 2 + 2 / 3 * sqrt(x * y) 
 approx2 <- ((x + y) / 2)^(1 / 3) * (sqrt(x * y))^(2 / 3) 
@@ -124,8 +120,8 @@ approx1 / (1 + correction) - logmean(x, y)
 
 #---- Some identities ----
 
-# A useful identity for turning an additive change into 
-# a proportionate change
+# A useful identity for turning an additive change into a proportionate 
+# change
 
 all.equal(logmean(x, y) * log(x / y), x - y) 
 

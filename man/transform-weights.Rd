@@ -11,7 +11,7 @@
 \description{
 Useful transformations for the weights in a generalized mean. 
 \itemize{
-\item{Transmute weights to turn a generalized mean of order \eqn{r}{r} into a generalized mean of order \eqn{s}{s}. Useful for calculating additive and multiplicative decompositions for a generalized-mean index, and those made of nested generalized means (e.g., Fisher index).}
+\item{Transmute weights to turn a generalized mean of order \eqn{r} into a generalized mean of order \eqn{s}. Useful for calculating additive and multiplicative decompositions for a generalized-mean index, and those made of nested generalized means (e.g., Fisher index).}
 \item{Factor weights to turn the generalized mean of a product into the product of generalized means. Useful for price-updating the weights in a generalized-mean index.}
 \item{Scale weights so they sum to 1.}
 }
@@ -26,7 +26,7 @@ nested_transmute2(r1, r2, s, t = c(1, 1))
 
 factor_weights(r)
 
-update_weights(x, w)
+update_weights(x, w = NULL)
 
 scale_weights(x)
 }
@@ -50,7 +50,7 @@ The function \code{transmute_weights()} returns a function to compute a vector o
 
 \preformatted{nested_mean(r1, r2, t)(x, w1, w2) == generalized_mean(s)(x, v(x, w1, w2))}
 
-This generalizes the result for turning a geometric mean into an arithmetic mean (and vice versa) in section 4.2 of Balk (2008), and a Fisher mean into an arithmetic mean in section 6 of Reinsdorf et al. (2002), although these are usually the most important cases. See Martin (2021) for details. \code{nested_transmute2()} takes a slightly different approach than \code{nested_transmute()}, generalizing the van IJzeren arithmetic decomposition for the Fisher index in section 4.2.2 of Balk (2008) using the approach by Martin (2021), although in most cases the results are broadly similar.
+This generalizes the result for turning a geometric mean into an arithmetic mean (and vice versa) in section 4.2 of Balk (2008), and a Fisher mean into an arithmetic mean in section 6 of Reinsdorf et al. (2002), although these are usually the most important cases. See Martin (2021) for details. \code{nested_transmute2()} takes a slightly different approach than \code{nested_transmute()}, generalizing the van IJzeren arithmetic decomposition for the Fisher index (Balk, 2008, section 4.2.2) using the approach by Martin (2021), although in most cases the results are broadly similar.
 
 The function \code{factor_weights()} returns a function to compute weights \code{u(x, w)} such that 
 
@@ -69,13 +69,13 @@ Both \code{x} and \code{w} should be strictly positive. This is not enforced, bu
 \value{
 \code{transmute_weights()} and \code{factor_weights()} return a function: 
 
-\preformatted{function(x, w){...}}
+\preformatted{function(x, w = NULL){...}}
 
 In each case this function augments the weights \code{w}.
 
 \code{nested_transmute()} and \code{nested_transmute2()} similarly return a function:
 
-\preformatted{function(x, w1, w2){...}}
+\preformatted{function(x, w1 = NULL, w2 = NULL){...}}
 
 \code{update_weights()} and \code{scale_weights()} return a numeric vector the same length as \code{x}.
 }
@@ -91,7 +91,7 @@ ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004). \emph{Producer Price Index
 
 Martin, S. (2021). A note on general decompositions for price indexes. \emph{Prices Analytical Series}, Statistics Canada catalogue no. 62F0014M. Statistics Canada, Ottawa.
 
-Reinsdorf, M. B., Diewert, W. E., and Ehemann, C. (2002). Additive decompositions for Fisher, Tornqvist and geometric mean indexes. \emph{Journal of Economic and Social Measurement}, 28(1-2):51--61.
+Reinsdorf, M. B., Diewert, W. E., and Ehemann, C. (2002). Additive decompositions for Fisher, Törnqvist and geometric mean indexes. \emph{Journal of Economic and Social Measurement}, 28(1-2):51--61.
 
 Sydsaeter, K., Strom, A., and Berck, P. (2005). \emph{Economists' Mathematical Manual} (4th edition). Springer.
 }
@@ -103,7 +103,7 @@ Sydsaeter, K., Strom, A., and Berck, P. (2005). \emph{Economists' Mathematical M
 
 \code{\link{extended_mean}} for the extended mean that underlies \code{transmute_weights()}.
 
-\code{\link{contributions}} for calculating additive quote contributions.
+\code{\link{contributions}} for calculating additive percent-change contributions.
 
 \code{\link{grouped}} to make each of these functions operate on grouped data.
 }
@@ -126,8 +126,8 @@ harmonic_mean(x, transmute_weights(0, -1)(x))
 # for an arithmetic mean is the same as using weights w / x
 
 all.equal(
-    scale_weights(transmute_weights(-1, 1)(x, w)),
-    scale_weights(w / x)
+  scale_weights(transmute_weights(-1, 1)(x, w)),
+  scale_weights(w / x)
 )
 
 # Works for nested means, too
@@ -140,10 +140,27 @@ fisher_mean(x, w1, w2)
 arithmetic_mean(x, nested_transmute(0, c(1, -1), 1)(x, w1, w2))
 arithmetic_mean(x, nested_transmute2(0, c(1, -1), 1)(x, w1, w2))
 
-#---- Quote contributions ----
+# Note that nested_transmute() has an invariance property
+# not shared by nested_transmute2()
 
-# Transmuted weights can be used to calculate quote contributions 
-# for, e.g., a geometric price index
+all.equal(
+  nested_transmute(0, c(1, -1), 1)(x, w1, w2),
+  transmute_weights(2, 1)(
+    x, nested_transmute(0, c(1, -1), 2)(x, w1, w2)
+  )
+)
+
+all.equal(
+  nested_transmute2(0, c(1, -1), 1)(x, w1, w2),
+  transmute_weights(2, 1)(
+    x, nested_transmute2(0, c(1, -1), 2)(x, w1, w2)
+  )
+)
+
+#---- Percent-change contributions ----
+
+# Transmuted weights can be used to calculate percent-change 
+# contributions for, e.g., a geometric price index
 
 scale_weights(transmute_weights(0, 1)(x)) * (x - 1)
 geometric_contributions(x) # the more convenient way
@@ -175,5 +192,6 @@ arithmetic_mean(x, w) * arithmetic_mean(y, update_weights(x, w))
 # In cases where x and y have the same order, Chebyshev's 
 # inequality implies that the chained calculation is too small
 
-arithmetic_mean(x * y, w) > arithmetic_mean(x, w) * arithmetic_mean(y, w)
+arithmetic_mean(x * y, w) > 
+  arithmetic_mean(x, w) * arithmetic_mean(y, w)
 }
