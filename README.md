@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file. -->
 
-# Generalized Price and Quantity Indexes
+# Generalized Price and Quantity Indexes <a href="https://marberts.github.io/gpindex/"><img src="man/figures/logo.png" align="right" height="139" alt="gpindex website" /></a>
 
 <!-- Badges -->
 
@@ -11,32 +11,38 @@ status](https://www.r-pkg.org/badges/version/gpindex)](https://cran.r-project.or
 badge](https://marberts.r-universe.dev/badges/gpindex)](https://marberts.r-universe.dev)
 [![R-CMD-check](https://github.com/marberts/gpindex/workflows/R-CMD-check/badge.svg)](https://github.com/marberts/gpindex/actions)
 [![codecov](https://codecov.io/gh/marberts/gpindex/branch/master/graph/badge.svg?token=lHDHsGHsLd)](https://app.codecov.io/gh/marberts/gpindex)
+[![DOI](https://zenodo.org/badge/261861375.svg)](https://zenodo.org/doi/10.5281/zenodo.10097742)
 
-A small package for calculating lots of different price indexes, and by
-extension quantity indexes. Provides tools to build and work with any
-type of bilateral generalized-mean index (of which most price indexes
-are), along with a few important indexes that don’t belong to the
-generalized-mean family (e.g., superlative quadratic-mean indexes,
-GEKS). Implements and extends many of the methods in Balk (2008), von
-der Lippe (2001), and the CPI manual (2020) for bilateral price indexes.
+Tools to build and work with bilateral generalized-mean price indexes
+(and by extension quantity indexes), and indexes composed of
+generalized-mean indexes (e.g., superlative quadratic-mean indexes,
+GEKS). Covers the core mathematical machinery for making bilateral price
+indexes, computing price relatives, detecting outliers, and decomposing
+indexes, with wrapper for all common (and many uncommon) index-number
+formulas. Implements and extends many of the methods in Balk (2008), von
+der Lippe (2001), and the CPI manual (2020).
 
 ## Installation
+
+Get the stable release from CRAN.
 
 ``` r
 install.packages("gpindex")
 ```
 
-The development version can be installed from GitHub.
+The development version can be installed from R-Universe
 
 ``` r
-devtools::install_github("marberts/gpindex")
+install.packages("gpindex", repos = c("https://marberts.r-universe.dev", "https://cloud.r-project.org"))
+```
+
+or directly from GitHub.
+
+``` r
+pak::pak("marberts/gpindex")
 ```
 
 ## Usage
-
-The examples here give a brief introduction to how to use the
-functionality in this package. The package-level help page
-(`package?gpindex`) gives much more detail.
 
 ``` r
 library(gpindex)
@@ -61,8 +67,11 @@ quantity6
 #> 6 0.5 0.6 0.8 1.3  2.5
 
 # We'll only need prices and quantities for a few periods
-p0 <- price6[[1]]; p1 <- price6[[2]]; p2 <- price6[[3]]
-q0 <- price6[[1]]; q1 <- price6[[2]]
+p0 <- price6[[1]]
+p1 <- price6[[2]]
+p2 <- price6[[3]]
+q0 <- price6[[1]]
+q1 <- price6[[2]]
 
 # There are functions to calculate all common price indexes,
 # like the Laspeyres and Paasche index
@@ -73,7 +82,8 @@ paasche_index(p1, p0, q1)
 
 # The underlying mean functions are also available, as usually
 # only price relatives and weights are known
-s0 <- p0 * q0; s1 <- p1 * q1
+s0 <- p0 * q0
+s1 <- p1 * q1
 
 arithmetic_mean(p1 / p0, s0)
 #> [1] 1.4
@@ -85,35 +95,35 @@ harmonic_mean(p1 / p0, s1)
 laspeyres_index(p2, p0, q0)
 #> [1] 1.05
 
-arithmetic_mean(p1 / p0, s0) * 
+arithmetic_mean(p1 / p0, s0) *
   arithmetic_mean(p2 / p1, update_weights(p1 / p0, s0))
 #> [1] 1.05
 
 # The mean representation of a Paasche index makes it easy to
-# calculate quote contributions
+# calculate percent-change contributions
 harmonic_contributions(p1 / p0, s1)
 #> [1]  0.02857143  0.71428571  0.04642857 -0.02500000  0.06666667 -0.01904762
 
-# The ideas are the same for more exotic indexes, 
+# The ideas are the same for more exotic indexes,
 # like the Lloyd-Moulton index
 
 # Let's start by making some functions for the Lloyd-Moulton index
 # when the elasticity of substitution is -1 (an output index)
-lm <- lm_index(-1)
+lloyd_moulton <- lm_index(-1)
 quadratic_mean <- generalized_mean(2)
 quadratic_update <- factor_weights(2)
 quadratic_contributions <- contributions(2)
 
 # This index can be calculated as a mean of price relatives
-lm(p1, p0, q0) 
+lloyd_moulton(p1, p0, q0)
 #> [1] 1.592692
 quadratic_mean(p1 / p0, s0)
 #> [1] 1.592692
 
 # Chained over time
-lm(p2, p0, q0)
+lloyd_moulton(p2, p0, q0)
 #> [1] 1.136515
-quadratic_mean(p1 / p0, s0) * 
+quadratic_mean(p1 / p0, s0) *
   quadratic_mean(p2 / p1, quadratic_update(p1 / p0, s0))
 #> [1] 1.136515
 
@@ -121,6 +131,18 @@ quadratic_mean(p1 / p0, s0) *
 quadratic_contributions(p1 / p0, s0)
 #> [1]  0.03110568  0.51154526  0.04832926 -0.03830484  0.06666667 -0.02665039
 ```
+
+## Prior work
+
+There are a number of R packages on the CRAN that implement the standard
+index-number formulas (e.g., **IndexNumber**, **productivity**,
+**IndexNumR**, **micEconIndex**, **PriceIndices**). While there is
+support for a large number of index-number formulas out-of-the box in
+this package, the focus is on the tools to easily make and work with any
+type of generalized-mean price index. Consequently, compared to existing
+packages, this package is suitable for building custom price/quantity
+indexes, calculating indexes with sample data, decomposing indexes, and
+learning about or researching different types of index-number formulas.
 
 ## References
 

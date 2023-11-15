@@ -282,19 +282,27 @@ test_that("grouping and balacing work", {
   # Grouped means
   f <- letters[c(1, 2, 3, 4, 5, 5, 4, 3, 2, 1, 5, 4, 3, 2, 1)]
   expect_equal(grouped(arithmetic_mean)(x, group = f), ave(x, f))
-  expect_equal(grouped(arithmetic_mean, na.rm = TRUE)(xna, group = f),
+  expect_equal(grouped(\(x) arithmetic_mean(x, na.rm = TRUE))(xna, group = f),
                ave(xna, f, FUN = function(x) mean(x, na.rm = TRUE)))
   # Balanced means
   expect_equal(arithmetic_mean(xna, w, na.rm = TRUE),
-            balanced(arithmetic_mean)(xna, w, na.rm = TRUE))
+               balanced(arithmetic_mean)(xna, w, na.rm = TRUE))
   expect_equal(arithmetic_mean(xna, w),
-            balanced(arithmetic_mean)(xna, w))
+               balanced(arithmetic_mean)(xna, w, na.rm = FALSE))
   expect_equal(arithmetic_mean(x, xna, na.rm = TRUE),
-            balanced(weighted.mean)(x, xna, na.rm = TRUE))
+               balanced(weighted.mean)(x, xna, na.rm = TRUE))
   expect_equal(
     balanced(fisher_mean)(
       c(1, NA, 3, 4), c(NA, 1, 1, 2), c(1, 2, NA, 4), na.rm = TRUE
     ), 4)
+  expect_equal(
+    balanced(fisher_mean)(x, xna, na.rm = TRUE),
+    sum(balanced(fisher_contributions)(x, xna, na.rm = TRUE)) + 1
+  )
+  expect_equal(
+    balanced(fisher_mean)(x, xna, na.rm = TRUE),
+    sum(balanced(fisher_contributions2)(x, xna, na.rm = TRUE)) + 1
+  )
 })
 
 test_that("error happen when expected", {
