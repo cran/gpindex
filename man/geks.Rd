@@ -7,7 +7,7 @@
 \alias{walsh_geks}
 \title{GEKS index}
 \usage{
-geks(f)
+geks(f, r = 0)
 
 tornqvist_geks(
   p,
@@ -40,9 +40,13 @@ walsh_geks(
 )
 }
 \arguments{
-\item{f}{A \link[=price_indexes]{price index function} that uses information on both
-base and current-period prices and quantities, and satisfies the
+\item{f}{A \link[=price_indexes]{price index function} that uses information on
+both base and current-period prices and quantities, and satisfies the
 time-reversal test. Usually a Törnqvist, Fisher, or Walsh index.}
+
+\item{r}{A finite number giving the order of the generalized mean used to
+average price indexes over the rolling window. The default uses a
+geometric mean.}
 
 \item{p}{A numeric vector of prices, the same length as \code{q}.}
 
@@ -84,9 +88,9 @@ with a named numeric vector giving the value of the respective
 period-over-period GEKS index for each window.
 }
 \description{
-Calculate an inter-temporal GEKS price index over a rolling window, as
-described in chapter 7 of Balk (2008), by Ivancic et al. (2011), and in
-chapter 10 of the CPI manual (2020).
+Calculate a generalized inter-temporal GEKS price index over a rolling
+window, as described in chapter 7 of Balk (2008), by Ivancic et al. (2011),
+and in chapter 10 of the CPI manual (2020).
 }
 \note{
 Like \code{\link[=back_period]{back_period()}}, if multiple prices
@@ -96,16 +100,26 @@ bilateral index, however, duplicated period-product pairs can have more
 subtle implications for a multilateral index.
 }
 \examples{
-price <- 1:6
-quantity <- 6:1
-period <- rep(1:3, 2)
-product <- rep(letters[1:2], each = 3)
+price <- 1:10
+quantity <- 10:1
+period <- rep(1:5, 2)
+product <- rep(letters[1:2], each = 5)
 
-tornqvist_geks(price, quantity, period, product)
+cumprod(tornqvist_geks(price, quantity, period, product)[[1]])
 
-tornqvist_geks(price, quantity, period, product, window = 2)
+# Calculate the index over a rolling window
 
-# Missing data
+(tg <- tornqvist_geks(price, quantity, period, product, window = 3))
+
+# Use a movement splice to combine the indexes in each window
+
+splice_index(tg, 2)
+
+# ... or use a mean splice
+
+splice_index(tg)
+
+#---- Missing data ----
 
 quantity[2] <- NA
 
@@ -118,7 +132,8 @@ fisher_geks(price, quantity, period, product, na.rm = TRUE)
 fg <- geks(balanced(fisher_index))
 fg(price, quantity, period, product, na.rm = TRUE)
 
-# Make a Jevons GEKS index
+#---- Make a Jevons GEKS index ----
+
 jevons_geks <- geks(\(p1, p0, ..., na.rm) jevons_index(p1, p0, na.rm))
 jevons_geks(price, quantity, period, product)
 
@@ -139,8 +154,9 @@ aggregation and the construction of price indexes.
 \code{GEKSIndex()} in the \pkg{indexNumR} package for an implementation of the
 GEKS index with more options.
 
-Other price-indexes: 
+Other price index functions: 
 \code{\link{index_weights}()},
-\code{\link{price_indexes}}
+\code{\link{price_indexes}},
+\code{\link{splice_index}()}
 }
-\concept{price-indexes}
+\concept{price index functions}

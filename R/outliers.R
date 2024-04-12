@@ -32,7 +32,10 @@
 #' relative before identifying outliers (sometimes under the assumption that
 #' price relatives are distributed log-normal). The Hidiroglou-Berthelot
 #' transformation is another approach, described in the CPI manual (par.
-#' 5.124).
+#' 5.124). (Sometimes the transformed price relatives are multiplied by
+#' \eqn{\max(p_1, p_0)^u}{max(p1, p0)^u}, for some
+#' \eqn{0 \le u \le 1}{0 <= u <= 1}, so that products with a larger price
+#' get flagged as outliers (par. 5.128).)
 #'
 #' @param x A strictly positive numeric vector of price relatives. These can be
 #' made with, e.g., [back_period()].
@@ -55,6 +58,9 @@
 #'
 #' [back_period()]/[base_period()] for a simple utility function to turn prices
 #' in a table into price relatives.
+#' 
+#' The `HBmethod()` function in the \pkg{univOutl} package for the
+#' Hidiroglou-Berthelot method for identifying outliers.
 #'
 #' @references
 #' Hutton, H. (2008). Dynamic outlier detection in price index surveys.
@@ -91,7 +97,7 @@
 quartile_method <- function(x, cu = 2.5, cl = cu, a = 0, type = 7) {
   x <- as.numeric(x)
   cu <- as.numeric(cu)
-  # it's faster to not recycle cu, cl, or a when they're length 1
+  # It's faster to not recycle cu, cl, or a when they're length 1.
   if (length(cu) != 1L) cu <- rep_len(cu, length(x))
   cl <- as.numeric(cl)
   if (length(cl) != 1L) cl <- rep_len(cl, length(x))
@@ -179,9 +185,9 @@ tukey_algorithm <- function(x, cu = 2.5, cl = cu, type = 7) {
   if (length(ts) == 0L) {
     return(tail)
   }
+  # In some versions m is the median.
   m <- mean(ts, na.rm = TRUE)
   x <- x - m
-  # in some versions m is the median
   u <- cu * (mean(ts[ts >= m], na.rm = TRUE) - m)
   l <- -cl * (m - mean(ts[ts <= m], na.rm = TRUE))
   x > u | x < l | tail

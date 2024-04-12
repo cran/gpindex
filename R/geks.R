@@ -1,20 +1,20 @@
 #' Make the GEKS matrix
 #' @noRd
 geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
-  # making base prices/quantities is the slowest part of the calculation;
+  # Making base prices/quantities is the slowest part of the calculation;
   # the algorithm calculates the lower-triangular part of the GEKS matrix
   # to avoid making relatives with different bases, then uses the
-  # time-reversal property of the 'index' function
+  # time-reversal property of the 'index' function.
   rows <- seq_len(nper)
   lt <- lapply(rows, function(i) {
     if (i < max(window - n, 2L)) {
-      # only the last n + 1 rows are needed for each window,
-      # so pad the top rows left of the diagonal with NA
+      # Only the last n + 1 rows are needed for each window,
+      # so pad the top rows left of the diagonal with NA.
       ans <- rep_len(NA_real_, i - 1L)
     } else {
-      # matching is only done for the lower-triangular part of the matrix
-      # match products for window - 1 periods left of the diagonal
-      # to minimize the number of back prices to find
+      # Matching is only done for the lower-triangular part of the matrix.
+      # Match products for window - 1 periods left of the diagonal
+      # to minimize the number of back prices to find.
       js <- seq.int(to = i - 1L, length.out = min(window, i) - 1L)
       m <- .mapply(
         match,
@@ -29,7 +29,7 @@ geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
         list(na.rm = na.rm)
       )
     }
-    # add the diagonal at the end and pad with NAs
+    # Add the diagonal at the end and pad with NAs.
     ans <- c(unlist(ans, use.names = FALSE), 1)
     front_pad <- rep_len(NA_real_, max(i - window, 0L))
     back_pad <- rep_len(NA_real_, nper - length(ans) - length(front_pad))
@@ -37,7 +37,7 @@ geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
   })
   res <- do.call(rbind, lt)
   rownames(res) <- colnames(res) <- names(p) # time periods
-  # exploit time reversal
+  # Exploit time reversal.
   ut <- upper.tri(res)
   res[ut] <- 1 / t(res)[ut]
   res
@@ -45,13 +45,16 @@ geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
 
 #' GEKS index
 #'
-#' Calculate an inter-temporal GEKS price index over a rolling window, as
-#' described in chapter 7 of Balk (2008), by Ivancic et al. (2011), and in
-#' chapter 10 of the CPI manual (2020).
+#' Calculate a generalized inter-temporal GEKS price index over a rolling
+#' window, as described in chapter 7 of Balk (2008), by Ivancic et al. (2011),
+#' and in chapter 10 of the CPI manual (2020).
 #'
-#' @param f A [price index function][price_indexes] that uses information on both
-#' base and current-period prices and quantities, and satisfies the
+#' @param f A [price index function][price_indexes] that uses information on
+#' both base and current-period prices and quantities, and satisfies the
 #' time-reversal test. Usually a Törnqvist, Fisher, or Walsh index.
+#' @param r A finite number giving the order of the generalized mean used to
+#' average price indexes over the rolling window. The default uses a
+#' geometric mean.
 #' @param p A numeric vector of prices, the same length as `q`.
 #' @param q A numeric vector of quantities, the same length as `p`.
 #' @param period A factor, or something that can be coerced into one, that
@@ -93,7 +96,6 @@ geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
 #' subtle implications for a multilateral index.
 #'
 #' @seealso
-#'
 #' `GEKSIndex()` in the \pkg{indexNumR} package for an implementation of the
 #' GEKS index with more options.
 #'
@@ -110,16 +112,26 @@ geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
 #' *Journal of Econometrics*, 161(1): 24--35.
 #'
 #' @examples
-#' price <- 1:6
-#' quantity <- 6:1
-#' period <- rep(1:3, 2)
-#' product <- rep(letters[1:2], each = 3)
+#' price <- 1:10
+#' quantity <- 10:1
+#' period <- rep(1:5, 2)
+#' product <- rep(letters[1:2], each = 5)
 #'
-#' tornqvist_geks(price, quantity, period, product)
+#' cumprod(tornqvist_geks(price, quantity, period, product)[[1]])
 #'
-#' tornqvist_geks(price, quantity, period, product, window = 2)
+#' # Calculate the index over a rolling window
+#' 
+#' (tg <- tornqvist_geks(price, quantity, period, product, window = 3))
+#' 
+#' # Use a movement splice to combine the indexes in each window
+#' 
+#' splice_index(tg, 2)
+#' 
+#' # ... or use a mean splice
+#' 
+#' splice_index(tg)
 #'
-#' # Missing data
+#' #---- Missing data ----
 #'
 #' quantity[2] <- NA
 #'
@@ -132,24 +144,27 @@ geks_matrix <- function(index, p, q, product, n, nper, window, na.rm) {
 #' fg <- geks(balanced(fisher_index))
 #' fg(price, quantity, period, product, na.rm = TRUE)
 #' 
-#' # Make a Jevons GEKS index
+#' #---- Make a Jevons GEKS index ----
+#' 
 #' jevons_geks <- geks(\(p1, p0, ..., na.rm) jevons_index(p1, p0, na.rm))
 #' jevons_geks(price, quantity, period, product)
 #'
-#' @family price-indexes
+#' @family price index functions
 #' @export
-geks <- function(f) {
+geks <- function(f, r = 0) {
   f <- match.fun(f)
-
+  gen_mean <- generalized_mean(r)
   function(p, q, period, product,
            window = nlevels(period), n = window - 1L, na.rm = FALSE) {
+    period <- as.factor(period)
+    product <- as.factor(product)
+    attributes(product) <- NULL # faster to match on numeric codes
+    
     if (different_lengths(p, q, period, product)) {
       stop("'p', 'q', 'period', and 'product' must be the same length")
     }
 
-    period <- as.factor(period)
     nper <- nlevels(period)
-
     if (nper == 0L) {
       return(list())
     }
@@ -175,8 +190,7 @@ geks <- function(f) {
 
     p <- split(p, period)
     q <- split(q, period)
-    product <- as.factor(product)
-    attributes(product) <- NULL # faster to match on numeric codes
+
     product <- split(product, period)
     if (duplicate_products(product)) {
       warning("there are duplicated period-product pairs")
@@ -184,14 +198,14 @@ geks <- function(f) {
 
     mat <- geks_matrix(f, p, q, product, n, nper, window, na.rm)
     rows <- seq_len(window) - 1L
-    # only the last n + 1 indexes in each window need to be kept
+    # Only the last n + 1 indexes in each window need to be kept.
     cols <- seq.int(window - n, window) - 1L
     res <- vector("list", nper - window + 1L)
-    # move down the diagonal to make the geks index
+    # Move down the diagonal to make the geks index.
     for (i in seq_along(res)) {
       index <- apply(
         mat[rows + i, cols + i, drop = FALSE], 2L,
-        geometric_mean,
+        gen_mean,
         na.rm = na.rm
       )
       res[[i]] <- index[-1L] / index[-length(index)]

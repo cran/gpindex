@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -44,6 +44,12 @@ drobisch_mean(p1 / p0, s0, s1)
 # Geometric AG mean index (elasticity of substitution 0.25)
 ag_mean <- nested_mean(0, c(0, 1), c(0.25, 0.75))
 ag_mean(p1 / p0, s0, s0)
+
+## -----------------------------------------------------------------------------
+# Laspeyres index, again
+arithmetic_mean(p1 / p0, index_weights("Laspeyres")(p0, q0))
+
+laspeyres_index(p1, p0, q0)
 
 ## -----------------------------------------------------------------------------
 quadratic_decomposition <- transmute_weights(2, 1)

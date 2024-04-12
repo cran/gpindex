@@ -439,6 +439,12 @@ generalized mean to calculate most common price indexes, and many
 uncommon ones. The <code>price_index</code> functions provide a simple
 wrapper, with the <code>quantity_index()</code> function turning each of
 these into its analogous quantity index.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Laspeyres index, again</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p0, <span class="fu">index_weights</span>(<span class="st">&quot;Laspeyres&quot;</span>)(p0, q0))</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; [1] 1.4</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="fu">laspeyres_index</span>(p1, p0, q0)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; [1] 1.4</span></span></code></pre></div>
 </div>
 <div id="decomposing-indexes" class="section level2">
 <h2>Decomposing indexes</h2>
@@ -448,36 +454,36 @@ These functions augment the weights in a generalized mean, and can be
 used to calculate percent-change contributions (with, e.g.,
 <code>contributions()</code>) and price-update weights for
 generalized-mean indexes.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>quadratic_decomposition <span class="ot">&lt;-</span> <span class="fu">transmute_weights</span>(<span class="dv">2</span>, <span class="dv">1</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p0, <span class="fu">quadratic_decomposition</span>(p1 <span class="sc">/</span> p0, s0))</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; [1] 1.592692</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p0, s0)</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; [1] 1.592692</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>quadratic_contributions <span class="ot">&lt;-</span> <span class="fu">contributions</span>(<span class="dv">2</span>)</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">quadratic_contributions</span>(p1 <span class="sc">/</span> p0, s0)</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; [1]  0.03110568  0.51154526  0.04832926 -0.03830484  0.06666667 -0.02665039</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>quadratic_update <span class="ot">&lt;-</span> <span class="fu">factor_weights</span>(<span class="dv">2</span>)</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p2 <span class="sc">/</span> p0, s0)</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; [1] 1.136515</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p2 <span class="sc">/</span> p1, <span class="fu">quadratic_update</span>(p1 <span class="sc">/</span> p0, s0)) <span class="sc">*</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  <span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p0, s0)</span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; [1] 1.136515</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>quadratic_decomposition <span class="ot">&lt;-</span> <span class="fu">transmute_weights</span>(<span class="dv">2</span>, <span class="dv">1</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p0, <span class="fu">quadratic_decomposition</span>(p1 <span class="sc">/</span> p0, s0))</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; [1] 1.592692</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p0, s0)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; [1] 1.592692</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>quadratic_contributions <span class="ot">&lt;-</span> <span class="fu">contributions</span>(<span class="dv">2</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">quadratic_contributions</span>(p1 <span class="sc">/</span> p0, s0)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; [1]  0.03110568  0.51154526  0.04832926 -0.03830484  0.06666667 -0.02665039</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>quadratic_update <span class="ot">&lt;-</span> <span class="fu">factor_weights</span>(<span class="dv">2</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p2 <span class="sc">/</span> p0, s0)</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; [1] 1.136515</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p2 <span class="sc">/</span> p1, <span class="fu">quadratic_update</span>(p1 <span class="sc">/</span> p0, s0)) <span class="sc">*</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>  <span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p0, s0)</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; [1] 1.136515</span></span></code></pre></div>
 <p>Percent-change contributions can similarly be calculated for indexes
 that nest generalized means.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>ag_decomposition <span class="ot">&lt;-</span> <span class="fu">nested_transmute</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="dv">1</span>, <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">ag_mean</span>(p1 <span class="sc">/</span> p0, s0, s0)</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; [1] 1.358687</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1<span class="sc">/</span> p0, <span class="fu">ag_decomposition</span>(p1 <span class="sc">/</span> p0, s0, s0))</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; [1] 1.358687</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>ag_contributions <span class="ot">&lt;-</span> <span class="fu">nested_contributions</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">ag_contributions</span>(p1 <span class="sc">/</span> p0, s0, s0)</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; [1]  0.03333243  0.29947183  0.04948725 -0.05377928  0.06536724 -0.03519241</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>ag_decomposition <span class="ot">&lt;-</span> <span class="fu">nested_transmute</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="dv">1</span>, <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">ag_mean</span>(p1 <span class="sc">/</span> p0, s0, s0)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; [1] 1.358687</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1<span class="sc">/</span> p0, <span class="fu">ag_decomposition</span>(p1 <span class="sc">/</span> p0, s0, s0))</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [1] 1.358687</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>ag_contributions <span class="ot">&lt;-</span> <span class="fu">nested_contributions</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">ag_contributions</span>(p1 <span class="sc">/</span> p0, s0, s0)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [1]  0.03333243  0.29947183  0.04948725 -0.05377928  0.06536724 -0.03519241</span></span></code></pre></div>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>

@@ -1,3 +1,32 @@
+#' Simplified extended mean for transmuting weights
+#' @noRd
+rdiff <- function(a, b, r) {
+  if (r == 0) {
+    log(a / b)
+  } else if (r == 1) {
+    a - b
+  } else {
+    a^r - b^r
+  }
+}
+
+extended_mean_ <- function(r, s) {
+  r <- as.numeric(r)
+  s <- as.numeric(s)
+  if (not_finite_scalar(r)) {
+    stop("'r' must be a finite length 1 numeric")
+  }
+  if (not_finite_scalar(s)) {
+    stop("'s' must be a finite length 1 numeric")
+  }
+  
+  function(x, m, tol = .Machine$double.eps^0.5) {
+    res <- rdiff(x, m, r) / rdiff(x, m, s)
+    res[abs(x - m) <= tol] <- m^(r - s)
+    res
+  }
+}
+
 #' Transmute weights
 #'
 #' Transmute weights to turn a generalized mean of order \eqn{r} into a
@@ -89,10 +118,12 @@
 #' # Transmuting the weights for a harmonic mean into those
 #' # for an arithmetic mean is the same as using weights w / x
 #'
-#' all.equal(
-#'   scale_weights(transmute_weights(-1, 1)(x, w)),
-#'   scale_weights(w / x)
-#' )
+#' all.equal(transmute_weights(-1, 1)(x, w), scale_weights(w / x))
+#' 
+#' # Transmuting the weights for an arithmetic mean into those
+#' # for a harmonic mean is the same as using weights w * x
+#'
+#' all.equal(transmute_weights(1, -1)(x, w), scale_weights(w * x))
 #'
 #' # Works for nested means, too
 #'
@@ -120,13 +151,24 @@
 #'     x, nested_transmute2(0, c(1, -1), 2)(x, w1, w2)
 #'   )
 #' )
+#' 
+#' #---- Monotonicity ----
+#' 
+#' # Transmuted weights increase when x is small and decrease
+#' # when x is large if r < s
+#' 
+#' transmute_weights(0, 1)(x, w) > scale_weights(w)
+#' 
+#' # The opposite happens when r > s
+#' 
+#' transmute_weights(1, 0)(x, w) > scale_weights(w)
 #'
 #' #---- Percent-change contributions ----
 #'
 #' # Transmuted weights can be used to calculate percent-change
 #' # contributions for, e.g., a geometric price index
 #'
-#' scale_weights(transmute_weights(0, 1)(x)) * (x - 1)
+#' transmute_weights(0, 1)(x) * (x - 1)
 #' geometric_contributions(x) # the more convenient way
 #'
 #' #---- Basket representation of a price index ----
@@ -141,31 +183,34 @@
 #' qs <- transmute_weights(-1, 1)(p1 / p0) / p0
 #' all.equal(harmonic_mean(p1 / p0), sum(p1 * qs) / sum(p0 * qs))
 #'
-#' @family weights
+#' @family weights functions
 #' @export
 transmute_weights <- function(r, s) {
   r <- as.numeric(r)
   s <- as.numeric(s)
   gen_mean <- generalized_mean(r)
-  ext_mean <- extended_mean(r, s)
+  ext_mean <- extended_mean_(r, s)
 
   function(x, w = NULL) {
     if (r == s) {
       if (is.null(w)) {
         w <- rep.int(1, length(x))
       }
+      if (length(x) != length(w)) {
+        stop("'x' and 'w' must be the same length")
+      }
       w[is.na(x)] <- NA_real_
-      w
+      scale_weights(w)
     } else {
       m <- gen_mean(x, w, na.rm = TRUE)
       if (is.null(w)) {
-        v <- ext_mean(x, m)^(r - s)
+        v <- ext_mean(x, m)
         attributes(v) <- NULL
       } else {
-        v <- w * ext_mean(x, m)^(r - s)
+        v <- w * ext_mean(x, m)
         attributes(v) <- attributes(w)
       }
-      v
+      scale_weights(v)
     }
   }
 }
@@ -191,13 +236,13 @@ nested_transmute <- function(r1, r2, s, t = c(1, 1)) {
 
   function(x, w1 = NULL, w2 = NULL) {
     if (is.na(t[1L]) && !is.na(t[2L])) {
-      w <- scale_weights(r_weights2(x, w2))
+      w <- r_weights2(x, w2)
     } else if (!is.na(t[1L]) && is.na(t[2L])) {
-      w <- scale_weights(r_weights1(x, w1))
+      w <- r_weights1(x, w1)
     } else {
-      v1 <- scale_weights(r_weights1(x, w1))
-      v2 <- scale_weights(r_weights2(x, w2))
-      # the calculation is wrong if NAs in w1 or w2 propagate
+      v1 <- r_weights1(x, w1)
+      v2 <- r_weights2(x, w2)
+      # The calculation is wrong if NAs in w1 or w2 propagate.
       if (anyNA(w1)) {
         v1[is.na(v1) & !is.na(v2)] <- 0
       }
@@ -235,13 +280,13 @@ nested_transmute2 <- function(r1, r2, s, t = c(1, 1)) {
     m <- c(mean1(x, w1, na.rm = TRUE), mean2(x, w2, na.rm = TRUE))
     v <- s_weights(m, t)
     if (is.na(v[1L]) && !is.na(v[2L])) {
-      scale_weights(s_weights2(x, w2))
+      s_weights2(x, w2)
     } else if (!is.na(v[1L]) && is.na(v[2L])) {
-      scale_weights(s_weights1(x, w1))
+      s_weights1(x, w1)
     } else {
-      u1 <- scale_weights(s_weights1(x, w1))
-      u2 <- scale_weights(s_weights2(x, w2))
-      # the calculation is wrong if NAs in w1 or w2 propagate
+      u1 <- s_weights1(x, w1)
+      u2 <- s_weights2(x, w2)
+      # The calculation is wrong if NAs in w1 or w2 propagate.
       if (anyNA(w1)) {
         u1[is.na(u1) & !is.na(u2)] <- 0
       }
@@ -317,7 +362,7 @@ nested_transmute2 <- function(r1, r2, s, t = c(1, 1)) {
 #' arithmetic_mean(x * y, w) >
 #'   arithmetic_mean(x, w) * arithmetic_mean(y, w)
 #'
-#' @family weights
+#' @family weights functions
 #' @export
 factor_weights <- function(r) {
   r <- as.numeric(r)
@@ -326,6 +371,9 @@ factor_weights <- function(r) {
   }
 
   function(x, w = NULL) {
+    if (!is.null(w) && length(x) != length(w)) {
+      stop("'x' and 'w' must be the same length")
+    }
     if (r == 0) {
       if (is.null(w)) {
         w <- rep.int(1, length(x))
@@ -366,7 +414,7 @@ update_weights <- factor_weights(1)
 #' @examples
 #' scale_weights(1:5)
 #'
-#' @family weights
+#' @family weights functions
 #' @export
 scale_weights <- function(x) {
   x / sum(x, na.rm = TRUE)

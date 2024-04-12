@@ -129,7 +129,7 @@ all.equal(geometric_mean(x) - 1, sum(geometric_contributions(x)))
 # into weights for an arithmetic mean, then finding the contributions
 # to the percent change
 
-scale_weights(transmute_weights(0, 1)(x)) * (x - 1)
+transmute_weights(0, 1)(x) * (x - 1)
 
 # Not the only way to calculate contributions
 
@@ -228,6 +228,14 @@ Pp <- paasche_index(p1, p0, q1)
 superlative_contributions <- function(r) {
   nested_contributions(0, c(r / 2, -r / 2))
 }
+
+# Can be used to decompose the implict Walsh index
+
+superlative_contributions(1)(
+  p1 / p0,
+  index_weights("Laspeyres")(p0, q0),
+  index_weights("Paasche")(p1, q1)
+)
 
 # Works for other types of indexes, like the harmonic
 # Laspeyres Paasche index

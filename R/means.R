@@ -214,6 +214,9 @@ generalized_mean <- function(r) {
       }
       if (r == 0) {
         exp(sum(log(x)) / length(x))
+      } else if (r == 1) {
+        # The arithmetic case is important enough for the optimization.
+        sum(x) / length(x)
       } else {
         (sum(x^r) / length(x))^(1 / r)
       }
@@ -228,6 +231,8 @@ generalized_mean <- function(r) {
       }
       if (r == 0) {
         exp(sum(log(x) * w) / sum(w))
+      } else if (r == 1) {
+        sum(x * w) / sum(w)
       } else {
         (sum(x^r * w) / sum(w))^(1 / r)
       }
@@ -429,7 +434,7 @@ extended_mean <- function(r, s) {
   if (not_finite_scalar(s)) {
     stop("'s' must be a finite length 1 numeric")
   }
-
+  
   function(a, b, tol = .Machine$double.eps^0.5) {
     if (r == 0 && s == 0) {
       res <- sqrt(a * b)
@@ -442,7 +447,7 @@ extended_mean <- function(r, s) {
     } else {
       res <- ((a^s - b^s) / (a^r - b^r) * r / s)^(1 / (s - r))
     }
-    # set output to a when a == b
+    # Set output to a when a == b.
     i <- which(abs(a - b) <= tol)
     res[i] <- a[(i - 1L) %% length(a) + 1L]
     res
@@ -555,7 +560,7 @@ logmean <- generalized_logmean(0)
 #' # is proportional to the variance of x
 #'
 #' weighted_var <- function(x, w) {
-#'   arithmetic_mean(x^2, w) - arithmetic_mean(x, w)^2
+#'   arithmetic_mean((x - arithmetic_mean(x, w))^2, w)
 #' }
 #'
 #' arithmetic_mean(x, w) + weighted_var(x, w) / arithmetic_mean(x, w)
@@ -676,18 +681,9 @@ contraharmonic_mean <- lehmer_mean(2)
 #' # A function to make the superlative quadratic mean price index by
 #' # Diewert (1976) as a product of generalized means
 #'
-#' quadratic_mean_index <- function(x, w0, w1, r) {
-#'   x <- sqrt(x)
-#'   generalized_mean(r)(x, w0) * generalized_mean(-r)(x, w1)
-#' }
+#' quadratic_mean_index <- function(r) nested_mean(0, c(r / 2, -r / 2))
 #'
-#' quadratic_mean_index(x, w1, w2, 2)
-#'
-#' # Same as the nested generalized mean (with the order halved)
-#'
-#' quadratic_mean_index2 <- function(r) nested_mean(0, c(r / 2, -r / 2))
-#'
-#' quadratic_mean_index2(2)(x, w1, w2)
+#' quadratic_mean_index(2)(x, w1, w2)
 #'
 #' # The arithmetic AG mean index by Lent and Dorfman (2009)
 #'
@@ -705,7 +701,7 @@ contraharmonic_mean <- lehmer_mean(2)
 #' q1 <- quantity6[[2]]
 #' q0 <- quantity6[[1]]
 #'
-#' walsh <- quadratic_mean_index2(1)
+#' walsh <- quadratic_mean_index(1)
 #'
 #' sum(p1 * q1) / sum(p0 * q0) / walsh(q1 / q0, p0 * q0, p1 * q1)
 #'
@@ -715,6 +711,11 @@ contraharmonic_mean <- lehmer_mean(2)
 #' # quadratic mean price index of order 1
 #'
 #' walsh(p1 / p0, p0 * q0, p1 * q1)
+#' 
+#' # That requires using the average value share as weights
+#' 
+#' walsh_weights <- sqrt(scale_weights(p0 * q0) * scale_weights(p1 * q1))
+#' walsh(p1 / p0, walsh_weights, walsh_weights)
 #'
 #' #---- Missing values ----
 #'
