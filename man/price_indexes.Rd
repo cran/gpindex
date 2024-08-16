@@ -107,15 +107,16 @@ these functions produce functions to calculate the following indexes.
 \item Laspeyres
 \item Palgrave
 \item Unnamed index (arithmetic mean of Laspeyres and Palgrave)
-\item Drobisch (arithmetic mean of Laspeyres and Paasche)
+\item Drobisch (or Sidgwick, arithmetic mean of Laspeyres and Paasche)
 \item Walsh-I (arithmetic Walsh)
 \item Marshall-Edgeworth
 \item Geary-Khamis
 \item Lowe
 \item Young
+\item Hybrid-CSWD
 \item \strong{Geometric indexes}
 \item Jevons
-\item Geometric Laspeyres
+\item Geometric Laspeyres (or Jöhr)
 \item Geometric Paasche
 \item Geometric Young
 \item Törnqvist (or Törnqvist-Theil)
@@ -146,9 +147,10 @@ functions.
 In addition to these indexes, there are also functions for calculating a
 variety of indexes not based on generalized means. The Fisher index is the
 geometric mean of the arithmetic Laspeyres and Paasche indexes; the Harmonic
-Laspeyres Paasche index is the harmonic analog of the Fisher index (8054 on
-Fisher's list). The Carruthers-Sellwood-Ward-Dalen and
-Carruthers-Sellwood-Ward-Dalen-Balk indexes are sample analogs of the Fisher
+Laspeyres Paasche (or Harmonic Paasche Laspeyres) index is the harmonic
+analog of the Fisher index (8054 on Fisher's list). The
+Carruthers-Sellwood-Ward-Dalen and Carruthers-Sellwood-Ward-Dalen-Balk
+indexes are sample analogs of the Fisher
 index; the Balk-Walsh index is the sample analog of the Walsh index. The AG
 mean index is the arithmetic or geometric mean of the geometric and
 arithmetic Laspeyres indexes, weighted by the elasticity of substitution.
@@ -198,17 +200,15 @@ harmonic_mean(p1 / p0, index_weights("HybridLaspeyres")(p1, q0))
 
 all.equal(
   scale_weights(index_weights("HybridLaspeyres")(p1, q0)),
-  scale_weights(
-    transmute_weights(1, -1)(p1 / p0, index_weights("Laspeyres")(p0, q0))
-  )
+  transmute_weights(1, -1)(p1 / p0, index_weights("Laspeyres")(p0, q0))
 )
 
 # This strategy can be used to make more exotic indexes, like the
-# quadratic-mean index (von der Lippe, 2001, p. 71)
+# quadratic-mean index (von der Lippe, 2007, p. 61)
 
 generalized_mean(2)(p1 / p0, index_weights("Laspeyres")(p0, q0))
 
-# Or the exponential mean index (p. 64)
+# Or the exponential mean index (p. 62)
 
 log(arithmetic_mean(exp(p1 / p0), index_weights("Laspeyres")(p0, q0)))
 
@@ -340,13 +340,11 @@ Cambridge University Press.
 Fisher, I. (1922). \emph{The Making of Index Numbers}. Houghton Mifflin
 Company.
 
-ILO, IMF, OECD, Eurostat, UN, and World Bank. (2020).
-\emph{Consumer Price Index Manual: Theory and Practice}.
+IMF, ILO, Eurostat, UNECE, OECD, and World Bank. (2020).
+\emph{Consumer Price Index Manual: Concepts and Methods}.
 International Monetary Fund.
 
-von der Lippe, P. (2001).
-\emph{Chain Indices: A Study in Price Index Theory}, Spectrum of Federal
-Statistics vol. 16. Federal Statistical Office, Wiesbaden.
+von der Lippe, P. (2007). \emph{Index Theory and Price Statistics}. Peter Lang.
 
 von der Lippe, P. (2015). Generalized Statistical Means and New Price Index
 Formulas, Notes on some unexplored index formulas, their interpretations and

@@ -1,3 +1,11 @@
+## Version 0.6.2
+
+- `splice_index()` now keeps names.
+
+- Fixed a bug with `transmute_weights()` where the weights could be negative.
+
+- Price-index functions have better argument checking.
+
 ## Version 0.6.1
 
 - Updated maintainer email.

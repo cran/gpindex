@@ -6,7 +6,7 @@ rdiff <- function(a, b, r) {
   } else if (r == 1) {
     a - b
   } else {
-    a^r - b^r
+    (a^r - b^r) / r
   }
 }
 
@@ -189,7 +189,7 @@ transmute_weights <- function(r, s) {
   r <- as.numeric(r)
   s <- as.numeric(s)
   gen_mean <- generalized_mean(r)
-  ext_mean <- extended_mean_(r, s)
+  pow_ext_mean <- extended_mean_(r, s)
 
   function(x, w = NULL) {
     if (r == s) {
@@ -204,10 +204,10 @@ transmute_weights <- function(r, s) {
     } else {
       m <- gen_mean(x, w, na.rm = TRUE)
       if (is.null(w)) {
-        v <- ext_mean(x, m)
+        v <- pow_ext_mean(x, m)
         attributes(v) <- NULL
       } else {
-        v <- w * ext_mean(x, m)
+        v <- w * pow_ext_mean(x, m)
         attributes(v) <- attributes(w)
       }
       scale_weights(v)
@@ -337,7 +337,7 @@ nested_transmute2 <- function(r1, r2, s, t = c(1, 1)) {
 #' [grouped()] to make these functions operate on grouped data.
 #'
 #' @references
-#' ILO, IMF, OECD, Eurostat, UN, and World Bank. (2004).
+#' ILO, IMF, OECD, UNECE, and World Bank. (2004).
 #' *Producer Price Index Manual: Theory and Practice*.
 #' International Monetary Fund.
 #'
