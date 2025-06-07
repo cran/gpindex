@@ -16,8 +16,8 @@ follows the levels of \code{period} to agree with
 \code{\link[=cut.Date]{cut()}}.}
 
 \item{product}{A factor, or something that can be coerced into one, that
-gives the product identifier for each transaction. The default is to assume
-that all transactions are for the same product.}
+gives the product identifier for each transaction. The default is to
+assume that all transactions are for the same product.}
 
 \item{match_first}{Should products in the first period match with
 themselves (the default)?}
@@ -50,20 +50,20 @@ df <- data.frame(
 
 with(df, back_period(period, product))
 
-# Make period-over-period price relatives
+# Make period-over-period price relatives.
 
 with(df, price / price[back_period(period, product)])
 
-# Make fixed-base price relatives
+# Make fixed-base price relatives.
 
 with(df, price / price[base_period(period, product)])
 
-# Change the base period with relevel()
+# Change the base period with relevel().
 
 with(df, price / price[base_period(relevel(period, "2"), product)])
 
 # Warning is given if the same product has multiple prices
-# at any point in time
+# at any point in time.
 
 with(df, back_period(period))
 

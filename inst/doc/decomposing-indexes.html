@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Generalized Price and Quantity Indexes</title>
+<title>Decomposing price indexes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -83,7 +83,27 @@ code span.st { color: #4070a0; }
 code span.va { color: #19177c; } 
 code span.vs { color: #4070a0; } 
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
-</style>
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}</style>
 
 
 
@@ -234,125 +254,282 @@ window.Quarto = {
 
 
 <header id="title-block-header">
-<h1 class="title">Generalized Price and Quantity Indexes</h1>
+<h1 class="title">Decomposing price indexes</h1>
 
 </header>
 
 
-<p>Generalized-mean price indexes are a large family of price indexes with nice properties, such as the mean-value and identity properties (e.g., Balk, 2008, Chapter 3). When used with value-share weights, these indexes satisfy the key homogeneity properties, commensurability, and are consistent in aggregation. This last feature makes generalized-mean indexes natural candidates for making national statistics, and this justifies the hierarchical structure used by national statistical agencies for calculating and disseminating collections of price indexes.</p>
-<p>Almost all bilateral price indexes used in practice are either generalized-mean indexes (like the Laspeyres and Paasche index) or are nested generalized-mean indexes (like the Fisher index). The purpose of this vignette is to show some of the key functions for working with generalized-mean indexes. In what follows, everything is framed as a price index to avoid duplication; it is trivial to turn a price index into its analogous quantity index by simply switching prices and quantities.</p>
-<h2 id="making-generalized-mean-indexes">Making generalized-mean indexes</h2>
-<p>A generalized-mean price index is a weighted generalized mean of price relatives. Given a set of price relatives and weights, any generalized-mean price index is easily calculated with the <code>generalized_mean()</code> function. What distinguishes different generalized-mean price indexes are the weights and the order of the generalized mean. For example, the standard Laspeyres index uses base-period value-share weights in a generalized mean of order 1 (arithmetic mean).</p>
+<p><em>This vignette presents an extended version of <span class="citation" data-cites="martin2021">Martin (2021)</span>, and shows how to use the tools in this package to make these decompositions.</em></p>
+<p>It is often useful to be able to decompose a price index into an additive or multiplicative form to evaluate how each input to the index affects its value. Following <span class="citation" data-cites="balk2008">Balk (2008)</span>, a price index is said to admit an additive decomposition if there exist weights that allow it to be represented as an arithmetic mean of price relatives, and is said to admit a multiplicative decomposition if there are weights that allow it to be represented as a geometric mean. Switching prices for quantities gives the analogous statements for a quantity index, and nothing is lost by focusing on price indexes.</p>
+<p>There are several well-known decompositions for the most common types of bilateral price indexes. <span class="citation" data-cites="balk2008">Balk (2008, equation 4.13)</span> gives an additive decomposition for any index based on the geometric mean by transmuting the weights in the geometric mean with the logarithmic mean. This is the same decomposition derived by <span class="citation" data-cites="reinsdorf2002">Reinsdorf, Diewert, and Ehemann (2002, equation 20)</span> for the Törnqvist index. A similar approach yields a multiplicative decomposition for any index based on the arithmetic mean, again using the logarithmic mean <span class="citation" data-cites="balk2008">(Balk 2008, equation 4.8)</span>. Combining these results gives additive and multiplicative decompositions for the Fisher index <span class="citation" data-cites="reinsdorf2002">(Reinsdorf, Diewert, and Ehemann 2002, sec. 6)</span>. The van IJzeren additive decomposition for the Fisher index <span class="citation" data-cites="balk2008">(Balk 2008, equation 4.18)</span> is an alternative that does not explicitly use the logarithmic mean. Each of these decompositions results in weights that are positive and sum to one, as required to represent an index as an arithmetic or geometric mean.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p>I show how the additive and multiplicative decompositions for geometric, arithmetic, and Fisher indexes that use the logarithmic mean can be consolidated and made more general by switching out the logarithmic mean for the more general extended mean. The main result is a function that transmutes the weights in a generalized mean of a given order so that it can be represented as a generalized mean of any other order. This covers additive and multiplicative decompositions for indexes that do not belong to the arithmetic or geometric families, like harmonic indexes or the Lloyd-Moulton index, and allows both additive and multiplicative decompositions to be covered by a single equation, rather than treating them as different cases. Expressing a generalized index as a generalized mean of any other order also allows for the decomposition of indexes that are nested generalized means, like the family of superlative quadratic mean indexes that includes the Fisher index or the AG mean index by <span class="citation" data-cites="lent2009">Lent and Dorfman (2009)</span>. I demonstrate some useful properties of this general decomposition and show how it can be used to decompose indexes based on other types on means and decompose deflating a change in aggregate values with a price index. Throughout I show how the tools in the <em>gpindex</em> package can be used to decompose a price index.</p>
+<h2 id="sec-decompose">Decomposing generalized-mean indexes</h2>
+<p>A natural extension to the decompositions for indexes based on the arithmetic and geometric means is to derive weights that transform an index based on a generalized mean of order <span class="math inline">\(\rho\)</span> into one based on a generalized mean of order <span class="math inline">\(\varsigma\)</span>. To fix notation, let <span class="math inline">\(\mathbf{r} = (r_{1}, r_{2}, \ldots, r_{n}) \in \mathbb{R}^{n}_{++}\)</span> be a vector of price relatives for <span class="math inline">\(n\geq2\)</span> products and let <span class="math inline">\(\mathbf{w} = (w_{1}, w_{2}, \ldots, w_{n}) \in \Delta^{n - 1}\)</span> be the corresponding weights, where <span class="math inline">\(\Delta^{n - 1} = \{\mathbf{w} \in \mathbb{R}_{+}^{n} | \sum_{i = 1}^{n} w_{i} = 1\}\)</span> is the unit simplex. The goal is to find a vector-valued function <span class="math display">\[
+\mathbf{v}(\mathbf{r}, \mathbf{w}; \rho, \varsigma) = (v_{1}(\mathbf{r}, \mathbf{w}; \rho, \varsigma), v_{2}(\mathbf{r}, \mathbf{w}; \rho, \varsigma),\ldots, v_{n}(\mathbf{r}, \mathbf{w}; \rho, \varsigma))
+\]</span> mapping into <span class="math inline">\(\Delta^{n - 1}\)</span> such that <span class="math display">\[
+\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) \equiv \mathfrak{M}_{\varsigma}(\mathbf{r}, \mathbf{v}(\mathbf{r}, \mathbf{w}; \rho, \varsigma)),
+\]</span> where <span class="math inline">\(\mathfrak{M}_{\rho}\)</span> is the generalized mean <span class="math display">\[
+\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) =
+\begin{cases}
+\left(\sum_{i = 1}^{n} w_{i} r_i^{\rho}\right)^{1 / \rho} &amp; \text{if } \rho \neq 0 \\
+\prod_{i = 1}^{n} r_{i}^{w_{i}} &amp; \text{if } \rho = 0.
+\end{cases}
+\]</span></p>
+<p>Setting <span class="math inline">\(\varsigma = 1\)</span> then yields an additive decomposition for any index based on a generalized mean of order <span class="math inline">\(\rho\)</span>, such that <span class="math display">\[
+\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) = \sum_{i=1}^{n} r_{i} v_i(\mathbf{r}, \mathbf{w}; \rho, 1),
+\]</span> and setting <span class="math inline">\(\varsigma = 0\)</span> yields a multiplicative decomposition, such that <span class="math display">\[
+\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) = \prod_{i=1}^{n} r_{i}^{ v_i(\mathbf{r}, \mathbf{w}; \rho, 0)}.
+\]</span> Note that any index that admits an additive decomposition can be used to derive percent-change contributions for each price relative, <span class="math inline">\(v_i(\mathbf{r}, \mathbf{w}; \rho, 1) (r_i - 1)\)</span>, that sum up to <span class="math inline">\(\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) - 1\)</span>, although the converse is not true and it is possible to decompose an index into percent-change contributions that do not allow it to be represented as an arithmetic mean. Note also that other types of decompositions can be had by setting <span class="math inline">\(\varsigma\)</span> to a value other than 0 or 1; for example, setting <span class="math inline">\(\varsigma = -1\)</span> gives the harmonic decomposition,</p>
+<p><span class="math display">\[
+\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) = 1 / \left(\sum_{i=1}^{n} v_i(\mathbf{r}, \mathbf{w}; \rho, -1) / r_{i}\right),
+\]</span></p>
+<p>that will be useful in <a href="#sec-harmonic" class="quarto-xref">Section 2.3</a>.</p>
+<p><span class="citation" data-cites="balk2008">Balk (2008)</span> and <span class="citation" data-cites="reinsdorf2002">Reinsdorf, Diewert, and Ehemann (2002)</span> show how to derive <span class="math inline">\(\mathbf{v}(\mathbf{r}, \mathbf{w}; \rho, \varsigma)\)</span> when <span class="math inline">\(\rho = 1\)</span> and <span class="math inline">\(\varsigma = 0\)</span> (multiplicative decomposition of an arithmetic index) <span class="math display">\[
+v_{i}(\mathbf{r}, \mathbf{w}; 1, 0) = \frac{w_{i} \mathfrak{L}(r_{i}, \mathfrak{M}_{1}(\mathbf{r}, \mathbf{w}))}{\sum_{j=1}^{n} w_{j} \mathfrak{L}(r_{j}, \mathfrak{M}_{1}(\mathbf{r}, \mathbf{w}))}
+\]</span> and <span class="math inline">\(\rho = 0\)</span> and <span class="math inline">\(\varsigma = 1\)</span> (additive decomposition of a geometric index) <span class="math display">\[
+v_{i}(\mathbf{r}, \mathbf{w}; 0, 1) = \frac{w_{i} / \mathfrak{L}(r_{i}, \mathfrak{M}_{0}(\mathbf{r}, \mathbf{w}))}{\sum_{j=1}^{n} w_{j} / \mathfrak{L}(r_{j}, \mathfrak{M}_{0}(\mathbf{r}, \mathbf{w}))},
+\]</span> using the logarithmic mean <span class="math display">\[
+\mathfrak{L}(a, b) =
+\begin{cases}
+\frac{a - b}{\log(a / b)} &amp; a \neq b\\
+a &amp; a = b.
+\end{cases}
+\]</span></p>
+<p>Generalizing these results follows from replacing the logarithmic mean with the more general extended mean <span class="citation" data-cites="bullen2003">(Bullen 2003, 393)</span>, defined for any <span class="math inline">\(a,b &gt; 0\)</span> as <span class="math display">\[
+\mathfrak{E}_{\rho\varsigma}(a, b) =
+\begin{cases}
+\left(\frac{\varsigma(a^\rho - b^\rho)}{\rho(a^\varsigma - b^\varsigma)}\right)^{1 / (\rho - \varsigma)} &amp; \rho \neq \varsigma, \rho \neq 0, \varsigma \neq 0, a \neq b \\
+\left(\frac{a^\rho - b^\rho}{\rho\log(a / b)}\right)^{1 / \rho} &amp; \rho \neq 0, \varsigma = 0, a \neq b \\
+\left(\frac{a^\varsigma - b^\varsigma}{\varsigma\log(a / b)}\right)^{1 / \varsigma} &amp; \rho = 0, \varsigma \neq 0, a \neq b \\
+\frac{1}{\exp(1 / \rho)} \left(\frac{a^{a^\rho}}{b^{b^\rho}}\right)^{1 / (a^\rho - b^\rho)} &amp; \rho = \varsigma  \neq 0, a \neq b \\
+\sqrt{ab} &amp; \rho = \varsigma = 0, a \neq b \\
+a &amp; a = b.
+\end{cases}
+\]</span> The extended mean reduces to the logarithmic mean when either <span class="math inline">\(\rho = 0\)</span> and <span class="math inline">\(\varsigma = 1\)</span>, or <span class="math inline">\(\rho = 1\)</span> and <span class="math inline">\(\varsigma = 0\)</span>. But using the extended mean in place of the logarithmic mean allows for decompositions of indexes based on other types of means, like harmonic indexes (<span class="math inline">\(\rho = -1\)</span>) and the Lloyd-Moulton index (<span class="math inline">\(\rho = 1 - \sigma\)</span>, where <span class="math inline">\(\sigma\)</span> is an elasticity of substitution).</p>
+<p>The key to transforming the weights in a generalized mean of order <span class="math inline">\(\rho\)</span> into the weights for a generalized mean of order <span class="math inline">\(\varsigma\)</span> comes from noting that the extended mean is always strictly positive and satisfies the identity <span id="eq-identity"><span class="math display">\[
+\sum_{i=1}^{n} w_{i} \mathfrak{E}_{\rho\varsigma}(r_i, \mathfrak{M}_{\rho} (\mathbf{r}, \mathbf{w}))^{\rho - \varsigma} \varepsilon_{i}(\mathbf{r}, \mathbf{w}; \rho, \varsigma) \equiv 0,
+\tag{1}\]</span></span> where <span class="math display">\[
+\varepsilon_{i}(\mathbf{r}, \mathbf{w}; \rho, \varsigma) =
+\begin{cases}
+r_i^\varsigma - \mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w})^\varsigma &amp; \text{if } \varsigma \neq 0, \\
+\log(r_i) - \log(\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w})) &amp; \text{if } \varsigma = 0.
+\end{cases}
+\]</span> <a href="#eq-identity" class="quarto-xref">Equation 1</a> uses the extended mean to keep the weighted deviation from the mean constant for each price relative (up to a common factor of proportionality) when changing the order of the mean from <span class="math inline">\(\rho\)</span> to <span class="math inline">\(\varsigma\)</span>, without changing the value of the mean. Rearranging then gives that <span id="eq-res1"><span class="math display">\[
+v_{i}(\mathbf{r}, \mathbf{w}; \rho, \varsigma) =  w_{i} \mathfrak{E}_{\rho\varsigma}(r_i, \mathfrak{M}_{\rho} (\mathbf{r}, \mathbf{w}))^{\rho - \varsigma} \Bigg/ \sum_{j=1}^{n} w_{j} \mathfrak{E}_{\rho\varsigma}(r_j, \mathfrak{M}_{\rho} (\mathbf{r}, \mathbf{w}))^{\rho - \varsigma}
+\tag{2}\]</span></span> is a suitable function to find weights that turn an index based on a generalized mean of order <span class="math inline">\(\rho\)</span> into one based on a generalized mean of order <span class="math inline">\(\varsigma\)</span>.</p>
+<p>The function given by <a href="#eq-res1" class="quarto-xref">Equation 2</a> takes on all existing decompositions that I know of as special cases. Setting <span class="math inline">\(\rho = 0\)</span> and <span class="math inline">\(\varsigma = 1\)</span>, or <span class="math inline">\(\rho = 1\)</span> and <span class="math inline">\(\varsigma = 0\)</span>, gives the special cases by <span class="citation" data-cites="balk2008">Balk (2008)</span> and <span class="citation" data-cites="reinsdorf2002">Reinsdorf, Diewert, and Ehemann (2002)</span> for decomposing indexes based on arithmetic and geometric means (because the extended mean reduces to the logarithmic mean). Similarly, because <span class="math inline">\(\mathfrak{E}_{\rho\varsigma}(r_i, \mathfrak{M}_{\rho} (\mathbf{r}, \mathbf{w}))^{\rho - \varsigma} \equiv \left(\mathfrak{M}_{\rho} (\mathbf{r}, \mathbf{w}) r_{i}\right)^\rho\)</span> when <span class="math inline">\(\rho = -1\)</span> and <span class="math inline">\(\varsigma = 1\)</span>, or <span class="math inline">\(\rho = 1\)</span> and <span class="math inline">\(\varsigma = -1\)</span>, setting <span class="math inline">\(\rho = -1\)</span> and <span class="math inline">\(\varsigma = 1\)</span> reduces <a href="#eq-res1" class="quarto-xref">Equation 2</a> to <span class="math display">\[
+v_{i}(\mathbf{r}, \mathbf{w}; -1, 1) = \frac{w_{i} / r_{i}}{\sum_{i=1}^{n}w_{i} / r_{i}} ;
+\]</span> if <span class="math inline">\(\mathbf{w}\)</span> is a vector of current-period expenditure/revenue shares then these are the hybrid weights that allow a Paasche index to be calculated as an arithmetic mean of price relatives. Setting <span class="math inline">\(\rho = 1\)</span> and <span class="math inline">\(\varsigma = -1\)</span> reduces <a href="#eq-res1" class="quarto-xref">Equation 2</a> to <span class="math display">\[
+v_{i}(\mathbf{r}, \mathbf{w}; 1, -1) = \frac{w_{i} r_{i}}{\sum_{i=1}^{n}w_{i} r_{i}}.
+\]</span> If <span class="math inline">\(\mathbf{w}\)</span> is a vector of base-period expenditure/revenue shares then these are the hybrid weights that allow a Laspeyres index to be calculated as a harmonic mean of price relatives. As should be expected, the weights are unchanged if <span class="math inline">\(\rho = \varsigma\)</span> or each element of <span class="math inline">\(\mathbf{r}\)</span> takes on the same value.</p>
+<h3 id="transitivity-monotonicity-and-uniqueness">Transitivity, monotonicity, and uniqueness</h3>
+<p>The extended mean has two properties that make it useful for decomposing price indexes. First, the order of the extended mean has a transitivity property under multiplication: <span class="math inline">\(\mathfrak{E}_{\rho\varsigma}(a, b)^{\rho - \varsigma} = \mathfrak{E}_{\rho\tau}(a, b)^{\rho - \tau}\mathfrak{E}_{\tau\varsigma}(a, b)^{\tau - \varsigma}\)</span>. This means the function in <a href="#eq-res1" class="quarto-xref">Equation 2</a> is transitivity, such that transmuting the weights to turn a generalized mean of order <span class="math inline">\(\rho\)</span> into a generalized mean of order <span class="math inline">\(\tau\)</span>, and then transmuting these weights again to turn a generalized mean of order <span class="math inline">\(\tau\)</span> into a generalized mean of order <span class="math inline">\(\varsigma\)</span>, is the same as finding weights to make a generalized mean of order <span class="math inline">\(\rho\)</span> into one of <span class="math inline">\(\varsigma\)</span>. That is, <span class="math display">\[
+\mathbf{v}(\mathbf{r}, \mathbf{v}(\mathbf{r}, \mathbf{w}; \rho, \tau); \tau, \varsigma) \equiv \mathbf{v}(\mathbf{r}, \mathbf{w}; \rho, \varsigma).
+\]</span> As will be seen later, not all decompositions have this property.</p>
+<p>Second, the extended mean is a strictly increasing function in both arguments <span class="citation" data-cites="bullen2003">(Bullen 2003, 395)</span>. This means that the function in <a href="#eq-res1" class="quarto-xref">Equation 2</a> has a monotonicity property where by the transmuted weights increase (decrease) for large (small) price relatives if and only if <span class="math inline">\(\rho &gt; \varsigma\)</span>. That is, assuming <span class="math inline">\(\mathbf{r}\)</span> is ordered from smallest to largest (and does not contain all the same value), if <span class="math inline">\(\rho &gt; \varsigma\)</span> then there is a pair of integer <span class="math inline">\(k,l\)</span>, with <span class="math inline">\(k\leq l\)</span>, such that <span class="math inline">\(v_{i}(\mathbf{r}, \mathbf{w}; \rho, \varsigma) &gt; w_{i}\)</span> for <span class="math inline">\(i\geq l\)</span> and <span class="math inline">\(v_{i}(\mathbf{r}, \mathbf{w}; \rho, \varsigma) &lt; w_{i}\)</span> for <span class="math inline">\(i\leq k\)</span>, with these equalities reversed if <span class="math inline">\(\rho &lt; \varsigma\)</span>. Again, not all decompositions satisfy this property.</p>
+<p>The decomposition given by <a href="#eq-res1" class="quarto-xref">Equation 2</a> is unique when <span class="math inline">\(n = 2\)</span> and <span class="math inline">\(r_{1} \neq r_{2}\)</span>, and is the only such function that always returns <span class="math inline">\(\mathbf{w}\)</span> when <span class="math inline">\(r_{1} = r_{2}\)</span>. But <a href="#eq-res1" class="quarto-xref">Equation 2</a> is necessarily not unique when <span class="math inline">\(n\geq3\)</span>, and there are infinitely many ways to decompose an index based on the generalized mean.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> Nonetheless, the limited case of uniqueness will be useful in <a href="#sec-superlative" class="quarto-xref">Section 2.1</a>.</p>
+<h3 id="numerical-example">Numerical example</h3>
+<p>Consider the following numerical example of decomposing a quadratic-mean index <span class="citation" data-cites="vonderlippe2007">(Lippe 2007, 61)</span> (i.e., a producer price index with an elasticity of substitution of -1) made using the price and quantity data from <span class="citation" data-cites="balk2008">Balk (2008, tables 3.1 and 3.2)</span>. The <code>transmute_weights()</code> function factory parameterizes the decomposition in <a href="#eq-res1" class="quarto-xref">Equation 2</a> to make a function that decomposes any generalized-mean index.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gpindex)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Start with some data on prices and quantities for 6 products</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># over 5 periods</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>price6</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   t1  t2  t3  t4  t5</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1  1 1.2 1.0 0.8 1.0</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  1 3.0 1.0 0.5 1.0</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3  1 1.3 1.5 1.6 1.6</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4  1 0.7 0.5 0.3 0.1</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  1 1.4 1.7 1.9 2.0</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6  1 0.8 0.6 0.4 0.2</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>quantity6</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    t1  t2  t3  t4   t5</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1.0 0.8 1.0 1.2  0.9</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 1.0 0.9 1.1 1.2  1.2</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 2.0 1.9 1.8 1.9  2.0</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 1.0 1.3 3.0 6.0 12.0</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 4.5 4.7 5.0 5.6  6.5</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 0.5 0.6 0.8 1.3  2.5</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># We&#39;ll only need prices and quantities for a few periods</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> price6[[<span class="dv">1</span>]]</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> price6[[<span class="dv">2</span>]]</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> price6[[<span class="dv">3</span>]]</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>q1 <span class="ot">&lt;-</span> quantity6[[<span class="dv">1</span>]]</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>q2 <span class="ot">&lt;-</span> quantity6[[<span class="dv">2</span>]]</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>s1 <span class="ot">&lt;-</span> p1 <span class="sc">*</span> q1</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>s2 <span class="ot">&lt;-</span> p1 <span class="sc">*</span> q2</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Laspeyres index</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p1, s1)</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> price6[[<span class="dv">2</span>]]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> price6[[<span class="dv">1</span>]]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>q2 <span class="ot">&lt;-</span> quantity6[[<span class="dv">2</span>]]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>q1 <span class="ot">&lt;-</span> quantity6[[<span class="dv">1</span>]]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>rel <span class="ot">&lt;-</span> p2 <span class="sc">/</span> p1</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>s1 <span class="ot">&lt;-</span> <span class="fu">scale_weights</span>(p1 <span class="sc">*</span> q1)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>s2 <span class="ot">&lt;-</span> <span class="fu">scale_weights</span>(p2 <span class="sc">*</span> q2)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>quadratic_mean <span class="ot">&lt;-</span> <span class="fu">generalized_mean</span>(<span class="dv">2</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>quadratic_decomposition <span class="ot">&lt;-</span> <span class="fu">transmute_weights</span>(<span class="dv">2</span>, <span class="dv">1</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">quadratic_decomposition</span>(rel, s1)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quadratic_mean</span>(rel, s1),</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arithmetic_mean</span>(rel, v)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
-<p>Changing the order of the generalized mean to <span class="math inline">\(1 - \sigma\)</span>, where <span class="math inline">\(\sigma\)</span> is an elasticity of substitution, gives a Lloyd-Moulton index, whereas changing the weights to current-period value-shares gives a Palgrave index. This is the essence of the atomistic approach in chapter 2 of Selvanathan and Rao (1994).</p>
+<p>Because the quadratic mean is larger than the arithmetic mean, the weight from the smaller price relatives is transferred to the largest price relative.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lloyd-Moulton index (elasticity of substitution -1)</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>quadratic_mean <span class="ot">&lt;-</span> <span class="fu">generalized_mean</span>(<span class="dv">2</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p1, s1)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Palgrave index</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p1, s2)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(v <span class="sc">-</span> s1)[<span class="fu">order</span>(rel)]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -0.024395704 -0.010503706 -0.007454243 -0.008131901 -0.003049463</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [6]  0.053535017</span></span></code></pre></div>
 </div>
-<p>Generalized-mean indexes can also be nested together to get indexes like the Fisher, Drobisch, or AG mean index. The <code>nested_mean()</code> function is a simple wrapper for <code>generalized_mean()</code> for these cases.</p>
+<p>It is also readily seen that turning the arithmetic decomposition into a geometric one is the same as directly constructing the multiplicative decomposition.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fisher index</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fisher_mean</span>(p1 <span class="sc">/</span> p1, s1, s2)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Drobisch index</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>drobisch_mean <span class="ot">&lt;-</span> <span class="fu">nested_mean</span>(<span class="dv">1</span>, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">drobisch_mean</span>(p1 <span class="sc">/</span> p1, s1, s2)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Geometric AG mean index (elasticity of substitution 0.25)</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>ag_mean <span class="ot">&lt;-</span> <span class="fu">nested_mean</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ag_mean</span>(p1 <span class="sc">/</span> p1, s1, s1)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute_weights</span>(<span class="dv">1</span>, <span class="dv">0</span>)(rel, v),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute_weights</span>(<span class="dv">2</span>, <span class="dv">0</span>)(rel, s1)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
-<p>On top of these basic mathematical tools are functions for making standard price indexes when both prices and quantities are known. Weights for a large variety of indexes can be calculated with <code>index_weights()</code>, which can be plugged into the relevant generalized mean to calculate most common price indexes, and many uncommon ones. The <code>price_index</code> functions provide a simple wrapper, with the <code>quantity_index()</code> function turning each of these into its analogous quantity index.</p>
+<h2 id="extensions">Extensions</h2>
+<h3 id="sec-superlative">Decomposing superlative indexes</h3>
+<p>The additive and multiplicative decompositions for the Fisher index by <span class="citation" data-cites="reinsdorf2002">Reinsdorf, Diewert, and Ehemann (2002, sec. 6)</span> can be generalized in the same way as the decompositions for the arithmetic and geometric indexes by noting that the Fisher index is simply a nested generalized mean of indexes based on the generalized mean. For a pair of generalized means <span class="math inline">\(\mathfrak{N}_{\rho_{1}\rho_{2}}(\mathbf{r}, \mathbf{w}_{1}, \mathbf{w}_{2})=\left(\mathfrak{M}_{\rho_1}(\mathbf{r}, \mathbf{w}_1), \mathfrak{M}_{\rho_2}(\mathbf{r}, \mathbf{w}_2)\right)\)</span> mapping into <span class="math inline">\(R_2^{++}\)</span> with weights <span class="math inline">\(\mathbf{\omega}=(\omega_1, \omega_2) \in \Delta^1\)</span>, an index based on nested generalized means is written as <span id="eq-superlative"><span class="math display">\[
+\mathfrak{M}_{\rho}\left(\mathfrak{N}_{\rho_{1}\rho_{2}}(\mathbf{r}, \mathbf{w}_{1}, \mathbf{w}_{2}), \mathbf{\omega}\right).
+\tag{3}\]</span></span></p>
+<p>The general family of superlative quadratic mean indexes of order <span class="math inline">\(\tau\)</span> comes from setting <span class="math inline">\(\rho = 0\)</span>, <span class="math inline">\(\rho_1 = \tau / 2\)</span>, and <span class="math inline">\(\rho_2 = -\tau / 2\)</span> when <span class="math inline">\(\omega_1 = \omega_2 = 1 / 2\)</span>, <span class="math inline">\(\mathbf{w}_1\)</span> are base-period expenditure/revenue shares, and <span class="math inline">\(\mathbf{w}_2\)</span> are current-period expenditure/revenue shares. In particular, setting <span class="math inline">\(\tau = 2\)</span> gives the Fisher index and setting <span class="math inline">\(\tau = 1\)</span> gives the implicit Walsh index. But <a href="#eq-superlative" class="quarto-xref">Equation 3</a> covers other types of indexes as well; for example, setting each element of <span class="math inline">\(\mathbf{w}_1\)</span> and <span class="math inline">\(\mathbf{w}_2\)</span> to <span class="math inline">\(1 / n\)</span> when <span class="math inline">\(\tau = 2\)</span> gives the Carruthers-Sellwood-Ward-Dalén index that serves as an estimator for the Fisher index, whereas <span class="math inline">\(\tau = 1\)</span> gives the Balk-Walsh index. Setting <span class="math inline">\(\rho = -1\)</span> gives the harmonic analogue of the Fisher index, which is not a superlative quadratic mean indexes of order <span class="math inline">\(\tau\)</span>. Finally, setting <span class="math inline">\(\rho = \rho_{1} = \rho_{2}\)</span> and <span class="math inline">\(\mathbf{w}_{1} = \mathbf{w}_{2}\)</span> gives an index based on a generalized mean of order <span class="math inline">\(\rho\)</span>, so that the decomposition of an index based on the generalized mean is a special case of the decomposition for <a href="#eq-superlative" class="quarto-xref">Equation 3</a>.</p>
+<p>An index of the form in <a href="#eq-superlative" class="quarto-xref">Equation 3</a> can be decomposed into an index based on the generalized mean of order <span class="math inline">\(\rho\)</span> using the weights in <a href="#eq-res1" class="quarto-xref">Equation 2</a>, as it can be written as the generalized mean <span class="math display">\[
+\mathfrak{M}_{\rho}(\mathbf{r}, \omega_1 \mathbf{v}(\mathbf{r}, \mathbf{w}_1; \rho_1, \rho) + \omega_2\mathbf{v}(\mathbf{r}, \mathbf{w}_2; \rho_2, \rho)).
+\]</span> The transformation in <a href="#eq-res1" class="quarto-xref">Equation 2</a> then applies as before, just replacing <span class="math inline">\(\mathbf{w}\)</span> with the more complicated weights <span class="math inline">\(\omega_1 \mathbf{v}(\mathbf{r}, \mathbf{w}_1; \rho_1, \rho) + \omega_2\mathbf{v}(\mathbf{r}, \mathbf{w}_2, \rho_2, \rho)\)</span>, which can be written as <span id="eq-res2"><span class="math display">\[
+\mathbf{v}(\mathbf{r}, \omega_1 \mathbf{v}(\mathbf{r}, \mathbf{w}_1; \rho_1, \rho) + \omega_2\mathbf{v}(\mathbf{r}, \mathbf{w}_2; \rho_2, \rho); \rho, \varsigma).
+\tag{4}\]</span></span> The idea is to transmute the weights for both inner means to be of the same order as the outer mean (<span class="math inline">\(\rho\)</span>) so that they can be added together, and then transmute these weights to represent the outer generalized mean as a mean of order <span class="math inline">\(\varsigma\)</span>. Note that this means the decomposition satisfies the same transitivity property as <a href="#eq-res1" class="quarto-xref">Equation 2</a> with respect to <span class="math inline">\(\rho\)</span> and <span class="math inline">\(\varsigma\)</span>.</p>
+<p>Continuing with the previous example, the <code>nested_transmute()</code> factory parameterizes the decomposition in <a href="#eq-res2" class="quarto-xref">Equation 4</a> and can be used to decompose the Fisher index.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Laspeyres index, again</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p1, <span class="fu">index_weights</span>(<span class="st">&quot;Laspeyres&quot;</span>)(p1, q1))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">laspeyres_index</span>(p1, p1, q1)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>v1 <span class="ot">&lt;-</span> <span class="fu">nested_transmute</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>), <span class="dv">1</span>)(rel, s1, s2)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">fisher_mean</span>(rel, s1, s2), <span class="fu">arithmetic_mean</span>(rel, v1))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  v1,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quadratic_decomposition</span>(rel, <span class="fu">nested_transmute</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>), <span class="dv">2</span>)(rel, s1, s2))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
-<h2 id="decomposing-indexes">Decomposing indexes</h2>
-<p>Two important functions for decomposing generalized means are given by <code>transmute_weights()</code> and <code>factor_weights()</code>. These functions augment the weights in a generalized mean, and can be used to calculate percent-change contributions (with, e.g., <code>contributions()</code>) and price-update weights for generalized-mean indexes.</p>
+<p>An alternative approach to decompose <a href="#eq-superlative" class="quarto-xref">Equation 3</a> is to generalize the (additive) van IJzeren decomposition for the Fisher index, which can be written as <span id="eq-res3"><span class="math display">\[
+v_{1}(\mathfrak{N}_{\rho_{1}\rho_{2}}(\mathbf{r}, \mathbf{w}_{1}, \mathbf{w}_{2}), \mathbf{\omega}; \rho, \varsigma) \mathbf{v}(\mathbf{r}, \mathbf{w}_1; \rho_1, \varsigma) + v_{2}(\mathfrak{N}_{\rho_{1}\rho_{2}}(\mathbf{r}, \mathbf{w}_{1}, \mathbf{w}_{2}), \mathbf{\omega}; \rho, \varsigma) \mathbf{v}(\mathbf{r}, \mathbf{w}_2; \rho_2, \varsigma).  
+\tag{5}\]</span></span> Note that for a Fisher index, if <span class="math inline">\(\varsigma=1\)</span> then <span class="math inline">\(\mathbf{v}(\mathbf{r}, \mathbf{w}_1; \rho_1, \varsigma)\)</span> is a vector of base-period expenditure/revenue shares, <span class="math inline">\(\mathbf{v}(\mathbf{r}, \mathbf{w}_2; \rho_2, \varsigma)\)</span> is a vector of hybrid Paasche weights, and <span class="math inline">\(\mathbf{v}(\mathfrak{N}_{\rho_{1}\rho_{2}}(\mathbf{r}, \mathbf{w}_{1}, \mathbf{w}_{2}), \mathbf{\omega}; \rho, \varsigma)\)</span> are the unique weights that decompose the geometric mean of the Laspeyres and Paasche indexes, which equals the van IJzeren decomposition. The idea here is to transmute the weights for both the inner and outer generalized means so that they are means of order <span class="math inline">\(\varsigma\)</span>, then take the product of these weights. <a href="#eq-res2" class="quarto-xref">Equation 4</a> and <a href="#eq-res3" class="quarto-xref">Equation 5</a> generally give different decompositions, as the latter is not transitive, but reduce to <a href="#eq-res1" class="quarto-xref">Equation 2</a> when <span class="math inline">\(\rho = \rho_{1} = \rho_{2}\)</span> and <span class="math inline">\(\mathbf{w}_{1} = \mathbf{w}_{2}\)</span>. The <code>nested_transmute2()</code> function implements this method.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>quadratic_decomposition <span class="ot">&lt;-</span> <span class="fu">transmute_weights</span>(<span class="dv">2</span>, <span class="dv">1</span>)</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>v2 <span class="ot">&lt;-</span> <span class="fu">nested_transmute2</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>), <span class="dv">1</span>)(rel, s1, s2)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1 <span class="sc">/</span> p1, <span class="fu">quadratic_decomposition</span>(p1 <span class="sc">/</span> p1, s1))</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p1, s1)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>quadratic_contributions <span class="ot">&lt;-</span> <span class="fu">contributions</span>(<span class="dv">2</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">quadratic_contributions</span>(p1 <span class="sc">/</span> p1, s1)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0 0 0 0 0 0</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>quadratic_update <span class="ot">&lt;-</span> <span class="fu">factor_weights</span>(<span class="dv">2</span>)</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p2 <span class="sc">/</span> p1, s1)</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.411914</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="fu">quadratic_mean</span>(p2 <span class="sc">/</span> p1, <span class="fu">quadratic_update</span>(p1 <span class="sc">/</span> p1, s1)) <span class="sc">*</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quadratic_mean</span>(p1 <span class="sc">/</span> p1, s1)</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.411914</span></span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">fisher_mean</span>(rel, s1, s2), <span class="fu">arithmetic_mean</span>(rel, v2))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  v2,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quadratic_decomposition</span>(rel, <span class="fu">nested_transmute2</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>), <span class="dv">2</span>)(rel, s1, s2))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Mean relative difference: 7.760085e-05&quot;</span></span></code></pre></div>
 </div>
-<p>Percent-change contributions can similarly be calculated for indexes that nest generalized means.</p>
+<p>Overall the difference between the two approaches tends to be small.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ag_decomposition <span class="ot">&lt;-</span> <span class="fu">nested_transmute</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="dv">1</span>, <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ag_mean</span>(p1 <span class="sc">/</span> p1, s1, s1)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(p1<span class="sc">/</span> p1, <span class="fu">ag_decomposition</span>(p1 <span class="sc">/</span> p1, s1, s1))</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>ag_contributions <span class="ot">&lt;-</span> <span class="fu">nested_contributions</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>))</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ag_contributions</span>(p1 <span class="sc">/</span> p1, s1, s1)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0 0 0 0 0 0</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(v1 <span class="sc">-</span> v2)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       Min.    1st Qu.     Median       Mean    3rd Qu.       Max. </span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; -7.726e-06 -3.059e-06  1.977e-07  0.000e+00  2.617e-06  8.052e-06</span></span></code></pre></div>
 </div>
-<h2 id="references">References</h2>
-<p>Balk, B. M. (2008). <em>Price and Quantity Index Numbers</em>. Cambridge University Press.</p>
-<p>Selvanathan, E. A. and Rao, D. S. P. (1994). <em>Index Numbers: A Stochastic Approach</em>. MacMillan.</p>
+<h3 id="decomposing-aggregated-indexes">Decomposing aggregated indexes</h3>
+<p>The decomposition in <a href="#eq-res3" class="quarto-xref">Equation 5</a> can be extended to get a decomposition for an index constructed using the usual two-step procedure to make a price index. If price relatives are partitioned into <span class="math inline">\(k\)</span> groups, and an index is made from <span class="math inline">\(k\)</span> sub-indexes <span class="math inline">\(\mathfrak{N}_{\rho_{1}\ldots\rho_{k}}(\mathbf{r}, \mathbf{w}_{1}, \ldots, \mathbf{w}_{k}) = \left(\mathfrak{M}_{\rho_1}(\mathbf{r}_{1}, \mathbf{w}_{1}), \ldots, \mathfrak{M}_{\rho_k}(\mathbf{r}_{k}, \mathbf{w}_{k})\right)\)</span> with weights <span class="math inline">\(\mathbf{\omega}=(\omega_{1},\ldots,\omega_{k})\)</span> as a generalized mean of order <span class="math inline">\(\rho\)</span>, then</p>
+<p><span class="math display">\[
+v_{i}(\mathfrak{N}_{\rho_{1}\ldots\rho_{k}}(\mathbf{r}, \mathbf{w}_{1}, \ldots, \mathbf{w}_{k}), \mathbf{\omega}; \rho, \varsigma) \mathbf{v}(\mathbf{r}_{i}, \mathbf{w}_i; \rho_{i}, \varsigma)
+\]</span></p>
+<p>decomposes how the components of the <span class="math inline">\(i\)</span>-th sub-index contribute towards the total index. Concatenating each of these vectors of weights along with the vector of price relatives represents the nested mean over the partitioning of price relatives as a generalized mean of order <span class="math inline">\(\varsigma\)</span>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>group <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>), <span class="at">each =</span> <span class="dv">3</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>s1_by_group <span class="ot">&lt;-</span> <span class="fu">split</span>(s1, group)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>rel_by_group <span class="ot">&lt;-</span> <span class="fu">split</span>(rel, group)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>index_a <span class="ot">&lt;-</span> <span class="fu">quadratic_mean</span>(rel_by_group<span class="sc">$</span>a, s1_by_group<span class="sc">$</span>a)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>index_b <span class="ot">&lt;-</span> <span class="fu">geometric_mean</span>(rel_by_group<span class="sc">$</span>b)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">quadratic_mean</span>(<span class="fu">c</span>(index_a, index_b), <span class="fu">sapply</span>(s1_by_group, sum))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.375553</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>decomp_a <span class="ot">&lt;-</span> <span class="fu">quadratic_decomposition</span>(rel_by_group<span class="sc">$</span>a, s1_by_group<span class="sc">$</span>a)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>decomp_b <span class="ot">&lt;-</span> <span class="fu">transmute_weights</span>(<span class="dv">0</span>, <span class="dv">1</span>)(rel_by_group<span class="sc">$</span>b)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">Map</span>(</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">*</span><span class="st">`</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quadratic_decomposition</span>(<span class="fu">c</span>(index_a, index_b), <span class="fu">sapply</span>(s1_by_group, sum)),</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(decomp_a, decomp_b)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlist</span>()</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="fu">arithmetic_mean</span>(rel, v)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.375553</span></span></code></pre></div>
+</div>
+<h3 id="sec-harmonic">Decomposing deflators</h3>
+<p>The decomposition in <a href="#eq-res1" class="quarto-xref">Equation 2</a> can be used to construct a decomposition for how a price index deflates a change in aggregate value over time to get a quantity index. Letting <span class="math inline">\(V\)</span> be the change in total value between two periods, the implicit quantity index for a price index based on the generalized mean of order <span class="math inline">\(\rho\)</span> is</p>
+<p><span class="math display">\[
+\frac{V}{\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w})}.
+\]</span></p>
+<p>Using <a href="#eq-res1" class="quarto-xref">Equation 2</a> to find weights to represent <span class="math inline">\(\mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w})\)</span> as a harmonic mean means that</p>
+<p><span id="eq-res4"><span class="math display">\[
+V/ \mathfrak{M}_{\rho}(\mathbf{r}, \mathbf{w}) \equiv \mathfrak{M}_{\varsigma}(V / \mathbf{r}, \mathbf{v}(\mathbf{r}, \mathbf{w}; \rho, -\varsigma)),
+\tag{6}\]</span></span> where <span class="math inline">\(V / \mathbf{r} = \left(V / r_{1}, \ldots, V / r_{n}\right)\)</span>.</p>
+<p>Setting <span class="math inline">\(\varsigma=1\)</span> then gives an additive decomposition for how each price relative acts to deflate the change in total value over time, while setting <span class="math inline">\(\varsigma=0\)</span> gives a multiplicative decomposition. The same holds true when deflating with an index based on nested means, using either <a href="#eq-res2" class="quarto-xref">Equation 4</a> or <a href="#eq-res3" class="quarto-xref">Equation 5</a>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>V <span class="ot">&lt;-</span> <span class="fu">sum</span>(p2 <span class="sc">*</span> q2) <span class="sc">/</span> <span class="fu">sum</span>(p1 <span class="sc">*</span> q1)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">nested_transmute2</span>(<span class="dv">0</span>, <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>), <span class="sc">-</span><span class="dv">1</span>)(rel, s1, s2)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arithmetic_mean</span>(V <span class="sc">/</span> rel, v),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fisher_mean</span>(q2 <span class="sc">/</span> q1, s1, s2)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>V <span class="sc">/</span> rel <span class="sc">*</span> v</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.08971270 0.09467911 0.19432463 0.11454476 0.45833768 0.05478917</span></span></code></pre></div>
+</div>
+<h3 id="decomposing-contra-harmonic-indexes">Decomposing contra-harmonic indexes</h3>
+<p><span class="citation" data-cites="vonderlippe2015">von der Lippe (2015)</span> discusses using the contra-harmonic mean (or antiharmonic as he calls it), a special case of the Lehmer mean <span class="citation" data-cites="bullen2003">(Bullen 2003, 245)</span> (of order 2), to make price indexes.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arithmetic hybrid index</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arithmetic_mean</span>(p2 <span class="sc">/</span> p1, p2 <span class="sc">*</span> q1),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contraharmonic_mean</span>(p2 <span class="sc">/</span> p1, p1 <span class="sc">*</span> q1)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Palgrave index</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arithmetic_mean</span>(p2 <span class="sc">/</span> p1, p2 <span class="sc">*</span> q2),</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contraharmonic_mean</span>(p2 <span class="sc">/</span> p1, p1 <span class="sc">*</span> q2)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+</div>
+<p>The Lehmer mean of order <span class="math inline">\(\rho\)</span> is simply the arithmetic mean of the with weights</p>
+<p><span class="math display">\[
+\left(w_{1}r_{1}^{\rho - 1}, \ldots, w_{n}r_{n}^{\rho - 1}\right) / \sum_{i = 1}^{n} w_{i} r_{i}^{\rho - 1},
+\]</span></p>
+<p>and so indexes based on these means can be decomposed with <a href="#eq-res1" class="quarto-xref">Equation 2</a> by using the these weights instead of <span class="math inline">\(\mathbf{w}\)</span>.</p>
+<h2 class="unnumbered" id="references">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-balk2008" class="csl-entry" role="listitem">
+Balk, B. M. 2008. <em>Price and Quantity Index Numbers</em>. Cambridge University Press.
+</div>
+<div id="ref-bullen2003" class="csl-entry" role="listitem">
+Bullen, P. S. 2003. <em>Handbook of Means and Their Inequalities</em>. Springer Science+Business Media.
+</div>
+<div id="ref-diewert2002" class="csl-entry" role="listitem">
+Diewert, W. E. 2002. <span>“The Quadratic Approximation Lemma and Decompositions of Superlative Indexes.”</span> <em>Journal of Economic and Social Measurement</em> 28 (1-2): 63–88.
+</div>
+<div id="ref-hallerbach2005" class="csl-entry" role="listitem">
+Hallerbach, W. G. 2005. <span>“An Alternative Decomposition of the <span>F</span>isher Index.”</span> <em>Economics Letters</em> 86 (2): 147–52.
+</div>
+<div id="ref-lent2009" class="csl-entry" role="listitem">
+Lent, J., and A. H. Dorfman. 2009. <span>“Using a Weighted Average of Base Period Price Indexes to Approximate a Superlative Index.”</span> <em>Journal of Official Statistics</em> 25 (1): 149–49.
+</div>
+<div id="ref-vonderlippe2007" class="csl-entry" role="listitem">
+Lippe, Peter von der. 2007. <em>Index Theory and Price Statistics</em>. Peter Lang.
+</div>
+<div id="ref-martin2021" class="csl-entry" role="listitem">
+Martin, S. 2021. <span>“A Note on Generalized Decompositions for Price Indexes.”</span> Statistics Canada.
+</div>
+<div id="ref-reinsdorf2002" class="csl-entry" role="listitem">
+Reinsdorf, M. B., W. E. Diewert, and C. Ehemann. 2002. <span>“Additive Decompositions for <span>F</span>isher, <span>Tö</span>rnqvist and Geometric Mean Indexes.”</span> <em>Journal of Economic and Social Measurement</em> 28 (1-2): 51–61.
+</div>
+<div id="ref-vonderlippe2015" class="csl-entry" role="listitem">
+von der Lippe, P. 2015. <span>“Generalized Statistical Means and New Price Index Formulas, Notes on Some Unexplored Index Formulas, Their Interpretations and Generalizations.”</span> Munich Personal RePEc Archive paper no. 64952.
+</div>
+<div id="ref-webster2019" class="csl-entry" role="listitem">
+Webster, M. B., and R. C. Tarnow-Mordi. 2019. <span>“Decomposing Multilateral Price Indexes into the Contributions of Individual Commodities.”</span> <em>Journal of Official Statistics</em> 35: 461–86.
+</div>
+</div>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1"><p>There are decompositions with “weights” that do not sum to one, such as those for the Fisher index by <span class="citation" data-cites="reinsdorf2002">Reinsdorf, Diewert, and Ehemann (2002, sec. 2)</span> and <span class="citation" data-cites="hallerbach2005">Hallerbach (2005)</span>, and for other superlative indexes by <span class="citation" data-cites="diewert2002">Diewert (2002)</span>. <span class="citation" data-cites="balk2008">Balk (2008, equation 4.28)</span> gives the original multiplicative decomposition of the Fisher index, due to Vartia, for which the weights also do not sum to one. <span class="citation" data-cites="webster2019">Webster and Tarnow-Mordi (2019)</span> consider several decompositions for multilateral indexes, although again the “weights” do not sum to one.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Take, for example, (1/2, 1, 3/2) with weights (1/6, 1/3, 1/2). The weighted harmonic mean of is 1, which can be computed as an arithmetic mean with weights (1/3, 1/3, 1/3) or (1/4, 1/2, 1/4). Hence there are multiple additive decompositions for the harmonic mean.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
 
 
 

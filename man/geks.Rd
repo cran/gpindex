@@ -16,7 +16,8 @@ tornqvist_geks(
   product,
   window = nlevels(period),
   n = window - 1L,
-  na.rm = FALSE
+  na.rm = FALSE,
+  match_method = c("all", "back-price")
 )
 
 fisher_geks(
@@ -26,7 +27,8 @@ fisher_geks(
   product,
   window = nlevels(period),
   n = window - 1L,
-  na.rm = FALSE
+  na.rm = FALSE,
+  match_method = c("all", "back-price")
 )
 
 walsh_geks(
@@ -36,7 +38,8 @@ walsh_geks(
   product,
   window = nlevels(period),
   n = window - 1L,
-  na.rm = FALSE
+  na.rm = FALSE,
+  match_method = c("all", "back-price")
 )
 }
 \arguments{
@@ -72,12 +75,23 @@ default gives an index for each period in \code{window}. Non-integers are
 truncated towards zero.}
 
 \item{na.rm}{Passed to \code{f} to control if missing values are removed.}
+
+\item{match_method}{Either 'all' to match all products against each other
+(the default) or 'back-price' to match only back prices. The later can be
+faster when there is lots of product imbalanced, but should be used with
+a balanced index-number formula \code{f}.}
 }
 \value{
 \code{geks()} returns a function:
 
-\preformatted{function(p, q, period, product, window = nlevels(period), n =
-         window - 1, na.rm = FALSE){...}}
+\preformatted{function(p,
+         q,
+         period,
+         product,
+         window = nlevels(period),
+         n = window - 1,
+         na.rm = FALSE,
+         match_method = c("all", "back-price")){...}}
 
 This calculates a period-over-period GEKS index with the desired
 index-number formula, returning a list for each window with a named-numeric
@@ -106,32 +120,29 @@ product <- rep(letters[1:2], each = 5)
 
 cumprod(tornqvist_geks(price, quantity, period, product)[[1]])
 
-# Calculate the index over a rolling window
+# Calculate the index over a rolling window.
 
 (tg <- tornqvist_geks(price, quantity, period, product, window = 3))
 
-# Use a movement splice to combine the indexes in each window
+# Use a movement splice to combine the indexes in each window.
 
 splice_index(tg, 2)
 
-# ... or use a mean splice
+# ... or use a mean splice.
 
 splice_index(tg)
 
-#---- Missing data ----
+# Use all non-missing data.
 
 quantity[2] <- NA
-
-# Use all non-missing data
-
 fisher_geks(price, quantity, period, product, na.rm = TRUE)
 
-# Remove records with any missing data
+# Remove records with any missing data.
 
 fg <- geks(balanced(fisher_index))
 fg(price, quantity, period, product, na.rm = TRUE)
 
-#---- Make a Jevons GEKS index ----
+# Make a Jevons GEKS index.
 
 jevons_geks <- geks(\(p1, p0, ..., na.rm) jevons_index(p1, p0, na.rm))
 jevons_geks(price, quantity, period, product)
@@ -150,7 +161,7 @@ aggregation and the construction of price indexes.
 \emph{Journal of Econometrics}, 161(1): 24--35.
 }
 \seealso{
-\code{GEKSIndex()} in the \pkg{indexNumR} package for an implementation of the
+\code{GEKSIndex()} in the \pkg{IndexNumR} package for an implementation of the
 GEKS index with more options.
 
 Other price index functions: 

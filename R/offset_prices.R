@@ -7,7 +7,7 @@ offset_period <- function(f) {
     period <- as.factor(period)
     product <- as.factor(product)
     attributes(product) <- NULL # matching is faster on factor codes
-    
+
     if (length(period) != length(product)) {
       stop("'period' and 'product' must be the same length")
     }
@@ -36,23 +36,23 @@ offset_period <- function(f) {
 #' information is stored in a table.
 #'
 #' @param period A factor, or something that can be coerced into one, that
-#' gives the time period for each transaction. The ordering of time periods
-#' follows the levels of `period` to agree with
-#' [`cut()`][cut.Date].
+#'   gives the time period for each transaction. The ordering of time periods
+#'   follows the levels of `period` to agree with
+#'   [`cut()`][cut.Date].
 #' @param product A factor, or something that can be coerced into one, that
-#' gives the product identifier for each transaction. The default is to assume
-#' that all transactions are for the same product.
+#'    gives the product identifier for each transaction. The default is to
+#'    assume that all transactions are for the same product.
 #' @param match_first Should products in the first period match with
-#' themselves (the default)?
-#' 
+#'   themselves (the default)?
+#'
 #' @returns
 #' Both functions return a numeric vector of indices for the back/base periods.
 #' With `back_period()`, for all periods after the first, the resulting vector
 #' gives the location of the corresponding product in the previous period.
 #' With `base_period()`, the resulting vector gives the location of the
-#' corresponding product in the first period. The locations are unchanged for 
+#' corresponding product in the first period. The locations are unchanged for
 #' the first time period if `match_first = TRUE`, `NA` otherwise.
-#' 
+#'
 #' @note
 #' By definition, there must be at most one transaction for each product
 #' in each time period to determine a back/base period. If multiple transactions
@@ -73,20 +73,20 @@ offset_period <- function(f) {
 #'
 #' with(df, back_period(period, product))
 #'
-#' # Make period-over-period price relatives
+#' # Make period-over-period price relatives.
 #'
 #' with(df, price / price[back_period(period, product)])
 #'
-#' # Make fixed-base price relatives
+#' # Make fixed-base price relatives.
 #'
 #' with(df, price / price[base_period(period, product)])
 #'
-#' # Change the base period with relevel()
+#' # Change the base period with relevel().
 #'
 #' with(df, price / price[base_period(relevel(period, "2"), product)])
 #'
 #' # Warning is given if the same product has multiple prices
-#' # at any point in time
+#' # at any point in time.
 #'
 #' with(df, back_period(period))
 #'
